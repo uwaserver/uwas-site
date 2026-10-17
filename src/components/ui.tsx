@@ -18,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { Logo } from "./brand";
+import { OxogStudio } from "./oxog-studio";
 import { docs, REPO, VERSION } from "@/lib/content";
 
 function Github({ size = 19 }: { size?: number }) {
@@ -482,6 +483,7 @@ export function Footer() {
           </div>
         ))}
       </div>
+      <OxogStudio />
       <div className="container footer-bottom">
         <span>© {new Date().getFullYear()} UWAS contributors.</span>
         <span>AGPL-3.0 + commercial licensing</span>

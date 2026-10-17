@@ -1,0 +1,304 @@
+.oxog-studio {
+  --oxog-pink: #cb0061;
+  --oxog-purple: #692d91;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin-bottom: 36px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+}
+[data-theme="dark"] .oxog-studio {
+  --oxog-pink: #ff72b5;
+  --oxog-purple: #a35adb;
+}
+.oxog-glow {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 97% 0%, #ed08780c, transparent 55%),
+    radial-gradient(ellipse at 30% 100%, #692d9109, transparent 60%);
+}
+[data-theme="dark"] .oxog-glow {
+  background:
+    radial-gradient(ellipse at 97% 0%, #ed087814, transparent 55%),
+    radial-gradient(ellipse at 30% 100%, #a35adb10, transparent 60%);
+}
+.oxog-studio-grid {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) 250px;
+  align-items: center;
+  gap: 44px;
+  padding: 42px;
+}
+.oxog-symbol {
+  display: block;
+  border-radius: 12px;
+}
+.oxog-symbol svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.oxog-purple {
+  stroke: var(--oxog-purple);
+}
+.oxog-signature.is-drawing path {
+  stroke-dasharray: 400;
+  animation: oxog-draw 1.6s cubic-bezier(0.6, 0.1, 0.2, 1) both;
+}
+.oxog-signature.is-drawing path:nth-child(2) {
+  animation-delay: 0.25s;
+}
+.oxog-signature.is-drawing path:nth-child(3) {
+  animation-delay: 0.5s;
+}
+.oxog-signature.is-drawing path:nth-child(4) {
+  animation-delay: 0.9s;
+}
+.oxog-eyebrow {
+  display: block;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 8px;
+  font-weight: 400;
+  letter-spacing: 1.2px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.oxog-attribution {
+  font-size: 12px;
+  margin: 18px 0 5px;
+}
+.oxog-story h2 {
+  font-size: 44px;
+  letter-spacing: -2.3px;
+  font-weight: 750;
+}
+.oxog-story h2 a {
+  display: inline-flex;
+  align-items: baseline;
+}
+.oxog-net {
+  font-weight: 400;
+  color: var(--muted);
+}
+.oxog-dot {
+  color: #ed0878;
+}
+.oxog-story h2 svg {
+  align-self: center;
+  margin-left: 15px;
+  color: var(--muted);
+  transition:
+    transform 0.2s,
+    color 0.2s;
+}
+.oxog-story h2 a:hover svg {
+  color: var(--oxog-pink);
+  transform: translate(2px, -2px);
+}
+.oxog-description {
+  font-size: 13px;
+  line-height: 1.85;
+  max-width: 45ch;
+  margin: 17px 0;
+}
+.oxog-explore {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 11px;
+  font-weight: 550;
+  color: var(--oxog-pink);
+}
+.oxog-explore:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.oxog-projects ul {
+  list-style: none;
+  padding: 0;
+  margin: 13px 0 0;
+  display: grid;
+  gap: 7px;
+}
+.oxog-projects li {
+  min-width: 0;
+}
+.oxog-projects li a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+.oxog-projects li a:hover {
+  border-color: #ed087880;
+  background: var(--bg);
+}
+.oxog-projects li a > span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.oxog-projects strong {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 580;
+  line-height: 1.5;
+}
+.oxog-projects li a > span > span {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+.oxog-projects li svg {
+  color: var(--muted);
+}
+.oxog-studio-bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 17px 42px;
+  border-top: 1px solid var(--border);
+  font-size: 9px;
+  color: var(--muted);
+}
+.oxog-studio-bottom > span:first-child {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+@keyframes oxog-draw {
+  from {
+    stroke-dashoffset: 400;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@media (min-width: 1800px) {
+  .oxog-studio-grid {
+    grid-template-columns: 180px minmax(0, 1fr) 300px;
+    gap: 65px;
+    padding: 55px;
+  }
+  .oxog-story h2 {
+    font-size: 55px;
+  }
+  .oxog-description {
+    font-size: 16px;
+  }
+  .oxog-attribution {
+    font-size: 14px;
+  }
+  .oxog-explore {
+    font-size: 13px;
+  }
+  .oxog-projects strong {
+    font-size: 14px;
+  }
+  .oxog-projects li a > span > span {
+    font-size: 12px;
+  }
+  .oxog-eyebrow {
+    font-size: 10px;
+  }
+  .oxog-studio-bottom {
+    padding-inline: 55px;
+    font-size: 11px;
+  }
+}
+@media (max-width: 1150px) {
+  .oxog-studio-grid {
+    grid-template-columns: 110px minmax(0, 1fr) 215px;
+    gap: 28px;
+    padding: 32px;
+  }
+  .oxog-description {
+    font-size: 12px;
+  }
+  .oxog-story h2 {
+    font-size: 38px;
+  }
+  .oxog-attribution {
+    font-size: 11px;
+  }
+  .oxog-studio-bottom {
+    padding-inline: 32px;
+  }
+}
+@media (max-width: 850px) {
+  .oxog-studio-grid {
+    grid-template-columns: 110px minmax(0, 1fr);
+    gap: 28px;
+  }
+  .oxog-projects {
+    grid-column: 1/-1;
+  }
+  .oxog-projects ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .oxog-description {
+    max-width: 100%;
+  }
+}
+@media (max-width: 650px) {
+  .oxog-studio {
+    border-radius: 16px;
+    margin-bottom: 24px;
+  }
+  .oxog-studio-grid {
+    grid-template-columns: 1fr;
+    gap: 27px;
+    padding: 27px 22px;
+  }
+  .oxog-symbol {
+    width: 105px;
+  }
+  .oxog-story h2 {
+    font-size: 43px;
+  }
+  .oxog-attribution {
+    font-size: 12px;
+    margin-top: 17px;
+  }
+  .oxog-description {
+    font-size: 12px;
+  }
+  .oxog-projects li a {
+    padding: 10px;
+    gap: 5px;
+    height: 100%;
+  }
+  .oxog-projects strong {
+    font-size: 11px;
+  }
+  .oxog-projects li a > span > span {
+    font-size: 9px;
+  }
+  .oxog-projects li svg {
+    width: 12px;
+  }
+  .oxog-studio-bottom {
+    padding: 15px 22px;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 9px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .oxog-signature.is-drawing path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
