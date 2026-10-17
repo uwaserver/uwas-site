@@ -19,7 +19,9 @@ The website was tested using its actual static export, served by `npm run previe
 - 3840×2160 layout with constrained content width and larger typography.
 - Main, configuration guide, features, downloads and brand pages measured at 320, 390, 768, 1024, 1440 and 3840 pixels: all 30 combinations had no document-level horizontal overflow.
 - All 27 linked public routes checked at 390 pixels: H1 present, no document-level horizontal overflow and no visible unnamed buttons.
-- Theme cycle, persistence after reload and CSS theme application.
+- Appearance menu with Light/Dark/System preview cards, arrow-key selection, Escape/outside-click/Tab dismissal, and persistence after reload.
+- Theme changes synchronized across two open tabs; System selected the current operating-system palette.
+- Appearance panel and radio-card touch targets fit 320, 390, 768, 1024, 1440 and 3840 pixels.
 - Mobile hamburger open/close and documentation navigation.
 - Local search with “cache,” successful navigation to Caching, and an unmatched-query empty state and clear action.
 - Configuration tabs: WordPress content and keyboard ArrowRight transition to Reverse proxy.

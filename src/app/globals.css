@@ -2,6 +2,7 @@
 @import "@fontsource/jetbrains-mono/400.css";
 @import "@fontsource/jetbrains-mono/500.css";
 @import "./oxog-studio.css";
+@import "./theme-picker.css";
 
 :root {
   --bg: #fff;
@@ -365,11 +366,6 @@ button {
   border: 1px solid var(--border);
   padding: 2px 5px;
   border-radius: 4px;
-}
-.theme-control {
-  border-right: 1px solid var(--border);
-  border-radius: 0;
-  padding-right: 14px;
 }
 .github-link {
   display: flex;
@@ -3252,10 +3248,6 @@ button {
   }
   .mobile-toggle {
     display: flex;
-  }
-  .theme-control {
-    width: 33px;
-    padding-right: 11px;
   }
   .mobile-nav {
     display: flex;

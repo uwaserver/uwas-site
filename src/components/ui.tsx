@@ -11,13 +11,11 @@ import {
   ChevronRight,
   Copy,
   Menu,
-  Monitor,
-  Moon,
   Search,
-  Sun,
   X,
 } from "lucide-react";
 import { Logo } from "./brand";
+import { ThemePicker } from "./theme-picker";
 import { OxogStudio } from "./oxog-studio";
 import { docs, REPO, VERSION } from "@/lib/content";
 
@@ -185,62 +183,6 @@ export function ButtonLink({
   );
 }
 
-function readTheme() {
-  try {
-    const value = localStorage.getItem("uwas-theme");
-    return value === "dark" || value === "light" ? value : "system";
-  } catch {
-    return "system";
-  }
-}
-
-export function ThemeControl() {
-  const [theme, setTheme] = useState("system");
-  useEffect(() => {
-    const saved = readTheme();
-    setTheme(saved); // eslint-disable-line react-hooks/set-state-in-effect
-    const media = matchMedia("(prefers-color-scheme: dark)");
-    const update = () => {
-      const choice = readTheme();
-      document.documentElement.dataset.theme =
-        choice === "system" ? (media.matches ? "dark" : "light") : choice;
-    };
-    media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
-  }, []);
-  const next =
-    theme === "system" ? "light" : theme === "light" ? "dark" : "system";
-  return (
-    <button
-      className="icon-button theme-control"
-      aria-label={`Theme: ${theme}. Switch to ${next}`}
-      title={`Theme: ${theme} → ${next}`}
-      onClick={() => {
-        setTheme(next);
-        try {
-          localStorage.setItem("uwas-theme", next);
-        } catch {
-          /* Theme still works when storage is unavailable. */
-        }
-        document.documentElement.dataset.theme =
-          next === "system"
-            ? matchMedia("(prefers-color-scheme: dark)").matches
-              ? "dark"
-              : "light"
-            : next;
-      }}
-    >
-      {theme === "system" ? (
-        <Monitor size={18} />
-      ) : theme === "light" ? (
-        <Sun size={18} />
-      ) : (
-        <Moon size={18} />
-      )}
-    </button>
-  );
-}
-
 export function Header() {
   const path = usePathname();
   const [open, setOpen] = useState(false);
@@ -295,7 +237,7 @@ export function Header() {
               <Search size={16} />
               <kbd>⌘ K</kbd>
             </button>
-            <ThemeControl />
+            <ThemePicker />
             <a
               className="github-link"
               href={REPO}
