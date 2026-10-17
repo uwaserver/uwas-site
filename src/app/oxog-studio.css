@@ -47,8 +47,11 @@
   stroke: var(--oxog-purple);
 }
 .oxog-signature.is-drawing path {
-  stroke-dasharray: 400;
-  animation: oxog-draw 1.6s cubic-bezier(0.6, 0.1, 0.2, 1) both;
+  stroke-dasharray: 1;
+  animation: oxog-draw 6s cubic-bezier(0.6, 0.1, 0.2, 1) infinite both;
+}
+.oxog-signature.is-waiting path {
+  opacity: 0;
 }
 .oxog-signature.is-drawing path:nth-child(2) {
   animation-delay: 0.25s;
@@ -179,11 +182,25 @@
   letter-spacing: 1px;
 }
 @keyframes oxog-draw {
-  from {
-    stroke-dashoffset: 400;
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 0;
   }
-  to {
+  2% {
+    opacity: 1;
+  }
+  27%,
+  82% {
     stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  94% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+  100% {
+    stroke-dashoffset: 1;
+    opacity: 0;
   }
 }
 @media (min-width: 1800px) {
@@ -297,8 +314,14 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .oxog-signature.is-drawing path {
+  .oxog-signature path {
     animation: none;
     stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+@media (scripting: none) {
+  .oxog-signature.is-waiting path {
+    opacity: 1;
   }
 }
