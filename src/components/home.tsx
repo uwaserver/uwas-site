@@ -400,7 +400,7 @@ export function FeatureGrid({ all = false }: { all?: boolean }) {
           )}
         </div>
       )}
-      <div className="feature-grid">
+      <div className={`feature-grid${all ? " feature-grid-catalog" : ""}`}>
         {shown.map((feature, index) => (
           <Reveal key={feature.id} delay={(index % 3) * 0.04}>
             <Link className="feature-card" href={`/docs/${feature.doc}/`}>

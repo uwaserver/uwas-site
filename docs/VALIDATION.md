@@ -1,5 +1,14 @@
 # Website validation
 
+## Responsive layout, October 18, 2026
+
+- Production static export checked on all 27 canonical routes at 375, 768, 1024, 1440, 1920 and 2560px: 162 route/viewport combinations, no document-level horizontal overflow, and consistent shared container alignment.
+- Shared maximum width is 1728px. Wide feature and documentation grids use four columns; text retains a separate readable measure.
+- Visual inspection at each requested width, light/dark theme checks, mobile appearance/navigation menus and catalog filtering. No browser console errors observed.
+- Final catalog column adjustment rechecked at all six widths, including two filtered cards at 2560px.
+- `npm run lint`, `npm run typecheck`, `npm run build` and `npm run check:export` passed on the final source changes.
+- See [Responsive layout](RESPONSIVE-LAYOUT.md) for tokens, measured widths and evidence locations.
+
 ## Local production build, October 17, 2026
 
 The website was tested using its actual static export, served by `npm run preview`, not only a development server.

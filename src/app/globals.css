@@ -5,6 +5,15 @@
 @import "./theme-picker.css";
 
 :root {
+  --layout-max: 1728px;
+  --page-gutter: clamp(32px, 3vw, 64px);
+  --section-space: clamp(64px, 6vw, 112px);
+  --layout-gap: clamp(24px, 3vw, 56px);
+  --grid-gap: clamp(16px, 1.5vw, 28px);
+  --panel-padding: clamp(24px, 2.5vw, 44px);
+  --card-padding: clamp(24px, 2vw, 34px);
+  --prose-width: 48rem;
+  --prose-measure: 72ch;
   --bg: #fff;
   --surface: #f7f9fc;
   --surface-2: #eef3fa;
@@ -135,11 +144,12 @@ button {
   background: none;
 }
 .container {
-  width: min(1320px, calc(100% - 112px));
+  width: min(var(--layout-max), calc(100% - 2 * var(--page-gutter)));
+  min-width: 0;
   margin-inline: auto;
 }
 .section {
-  padding-block: 108px;
+  padding-block: var(--section-space);
 }
 .muted {
   color: var(--muted);
@@ -379,11 +389,11 @@ button {
   display: none;
 }
 .hero {
-  padding-block: 82px 70px;
+  padding-block: clamp(48px, 5.5vw, 104px) clamp(40px, 4.5vw, 88px);
   display: grid;
   grid-template-columns: 1fr 1fr;
   align-items: center;
-  gap: 52px;
+  gap: var(--layout-gap);
 }
 .release-badge {
   display: inline-flex;
@@ -408,7 +418,7 @@ button {
   background: var(--border);
 }
 .hero h1 {
-  font-size: clamp(60px, 5.5vw, 86px);
+  font-size: clamp(60px, 5.5vw, 100px);
   letter-spacing: -0.065em;
   line-height: 1.045;
   font-weight: 650;
@@ -425,8 +435,8 @@ button {
   animation: cursor 2s steps(1) infinite;
 }
 .hero-description {
-  max-width: 445px;
-  font-size: 16px;
+  max-width: 42ch;
+  font-size: clamp(16px, 1vw, 18px);
   line-height: 1.8;
   margin-bottom: 28px;
 }
@@ -439,7 +449,7 @@ button {
   border: 1px solid var(--border);
   border-radius: 5px;
   padding: 8px 10px;
-  max-width: 535px;
+  max-width: min(100%, 46rem);
   min-width: 0;
 }
 .command-dollar {
@@ -767,8 +777,8 @@ button {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 45px;
-  margin-bottom: 43px;
+  gap: var(--layout-gap);
+  margin-bottom: clamp(28px, 3vw, 48px);
 }
 .section-heading p {
   font-size: 13px;
@@ -804,7 +814,7 @@ button {
 }
 .stack-story p {
   font-size: 13px;
-  max-width: 335px;
+  max-width: 56ch;
 }
 .segmented {
   display: inline-flex;
@@ -938,8 +948,8 @@ button {
 }
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--grid-gap);
 }
 .feature-grid > div {
   min-width: 0;
@@ -948,7 +958,7 @@ button {
   height: 100%;
   display: block;
   position: relative;
-  padding: 29px 26px 24px;
+  padding: var(--card-padding);
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--bg);
@@ -1036,15 +1046,15 @@ button {
   border-color: color-mix(in srgb, var(--blue) 30%, var(--border));
 }
 .config-section {
-  padding: 84px 0;
+  padding: var(--section-space) 0;
   background: var(--surface);
   border-block: 1px solid var(--border);
 }
 .config-layout {
   display: grid;
-  grid-template-columns: 1fr 1.1fr;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
   align-items: center;
-  gap: 100px;
+  gap: var(--layout-gap);
 }
 .config-layout h2 {
   margin-bottom: 25px;
@@ -1052,7 +1062,7 @@ button {
 .config-layout p {
   font-size: 14px;
   line-height: 1.9;
-  max-width: 365px;
+  max-width: 56ch;
 }
 .check-list {
   list-style: none;
@@ -1192,7 +1202,7 @@ button {
 }
 .dashboard-body {
   display: grid;
-  grid-template-columns: 180px 1fr;
+  grid-template-columns: clamp(180px, 12vw, 220px) minmax(0, 1fr);
   min-height: 360px;
 }
 .dashboard-sidebar {
@@ -1384,14 +1394,14 @@ button {
   color: var(--blue);
 }
 .ai-section {
-  padding-block: 90px;
+  padding-block: var(--section-space);
   background: var(--surface);
   border-block: 1px solid var(--border);
 }
 .ai-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 110px;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: var(--layout-gap);
   align-items: center;
 }
 .ai-layout h2 {
@@ -1498,8 +1508,8 @@ button {
 }
 .faq-section {
   display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
-  gap: 90px;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: var(--layout-gap);
 }
 .faq-section h2 {
   font-size: 40px;
@@ -1536,6 +1546,7 @@ button {
   color: var(--blue);
 }
 .faq-list details p {
+  max-width: var(--prose-measure);
   font-size: 12px;
   line-height: 1.9;
   padding-right: 30px;
@@ -1600,8 +1611,8 @@ button {
 }
 .footer-grid {
   display: grid;
-  grid-template-columns: 2fr repeat(3, 1fr);
-  gap: 60px;
+  grid-template-columns: minmax(240px, 1.4fr) repeat(3, minmax(0, 1fr));
+  gap: var(--layout-gap);
   padding-bottom: 48px;
 }
 .footer-brand p {
@@ -1650,9 +1661,8 @@ button {
   font-size: 8px;
 }
 .page-heading {
-  padding-top: 83px;
-  padding-bottom: 58px;
-  max-width: 1320px;
+  padding-top: clamp(50px, 5vw, 88px);
+  padding-bottom: clamp(38px, 4vw, 64px);
 }
 .page-heading h1 {
   font-size: clamp(44px, 5vw, 72px);
@@ -1668,7 +1678,7 @@ button {
   margin-bottom: 0;
 }
 .page-content {
-  padding-bottom: 100px;
+  padding-bottom: var(--section-space);
 }
 .page-heading + .page-content {
   padding-top: 0;
@@ -1678,11 +1688,11 @@ button {
 }
 .editorial-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 22px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--grid-gap);
 }
 .editorial-card {
-  padding: 38px;
+  padding: var(--panel-padding);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -1696,10 +1706,12 @@ button {
   margin-bottom: 22px;
 }
 .editorial-card p {
+  max-width: var(--prose-measure);
   font-size: 14px;
   line-height: 1.9;
 }
 .editorial-card ul {
+  max-width: var(--prose-measure);
   color: var(--muted);
   font-size: 13px;
   line-height: 2;
@@ -1719,7 +1731,13 @@ button {
   color: var(--text);
 }
 .article {
-  max-width: 820px;
+  max-width: var(--prose-width);
+}
+.container.article {
+  max-width: none;
+}
+.article > * {
+  max-width: var(--prose-width);
 }
 .article h2 {
   font-size: 29px;
@@ -1729,6 +1747,7 @@ button {
   margin-top: 0;
 }
 .article p {
+  max-width: min(var(--prose-width), var(--prose-measure));
   font-size: 15px;
   line-height: 1.95;
 }
@@ -1768,6 +1787,7 @@ button {
   margin: 18px 0;
 }
 .license-option p {
+  max-width: var(--prose-measure);
   font-size: 14px;
 }
 .license-option .eyebrow {
@@ -1779,8 +1799,8 @@ button {
 }
 .brand-showcase {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--grid-gap);
   margin-bottom: 50px;
 }
 .brand-tile {
@@ -1842,12 +1862,12 @@ button {
   font-size: 10px;
 }
 .release-list {
-  max-width: 960px;
+  max-width: calc(var(--prose-width) + 15rem);
 }
 .release-entry {
   display: grid;
-  grid-template-columns: 180px 1fr;
-  gap: 50px;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: var(--layout-gap);
   padding-block: 0 60px;
   position: relative;
 }
@@ -1920,6 +1940,7 @@ button {
   padding-bottom: 10px;
 }
 .flow-step {
+  flex: 1;
   padding: 20px 17px;
   min-width: 142px;
   border: 1px solid var(--border);
@@ -1944,8 +1965,8 @@ button {
 }
 .architecture-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 25px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--grid-gap);
 }
 .architecture-grid article {
   border-top: 1px solid var(--border);
@@ -1978,10 +1999,10 @@ button {
 }
 .docs-layout {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
-  gap: 55px;
+  grid-template-columns: clamp(220px, 12vw, 240px) minmax(0, 1fr);
+  gap: var(--layout-gap);
   padding-top: 50px;
-  padding-bottom: 100px;
+  padding-bottom: var(--section-space);
 }
 .docs-sidebar {
   align-self: start;
@@ -2042,8 +2063,8 @@ button {
 }
 .docs-cards {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--grid-gap);
   margin-top: 33px;
 }
 .docs-card {
@@ -2082,8 +2103,8 @@ button {
 }
 .doc-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 170px;
-  gap: 45px;
+  grid-template-columns: minmax(0, 1fr) clamp(170px, 12vw, 220px);
+  gap: var(--layout-gap);
 }
 .doc-prose {
   min-width: 0;
@@ -2098,7 +2119,8 @@ button {
   line-height: 1.3;
 }
 .doc-section p {
-  font-size: 13px;
+  max-width: var(--prose-measure);
+  font-size: clamp(13px, 0.9vw, 16px);
   line-height: 1.95;
 }
 .doc-section .code-block {
@@ -2301,39 +2323,42 @@ button {
     opacity: 0;
   }
 }
-@media (min-width: 1800px) {
-  .container {
-    width: min(1600px, calc(100% - 160px));
+/* Wide layouts add useful columns; typography and spacing remain bounded. */
+@media (min-width: 1440px) {
+  .docs-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  .hero {
-    gap: 110px;
-    padding-block: 110px;
+  .feature-card h3 {
+    font-size: clamp(18px, 1.15vw, 21px);
   }
-  .hero h1 {
-    font-size: 105px;
+  .feature-card p {
+    font-size: clamp(12px, 0.8vw, 14px);
   }
-  .hero-description {
-    font-size: 18px;
-    max-width: 510px;
+  .feature-tags > span {
+    font-size: 8px;
   }
-  .hero-command {
-    max-width: 590px;
+  .code-block pre {
+    font-size: 13px;
+  }
+  .config-playground .code-block {
+    min-height: 390px;
   }
   .hero-command code {
-    font-size: 10px;
+    font-size: clamp(9px, 0.6vw, 11px);
   }
   .hero-visual {
     padding-top: 20px;
   }
   .diagram-input {
-    height: 43px;
-    font-size: 11px;
+    height: clamp(35px, 2.3vw, 44px);
+    font-size: clamp(9px, 0.65vw, 12px);
   }
-  .diagram-input > svg {
-    width: 18px;
+  .diagram-top,
+  .diagram-bottom {
+    font-size: clamp(8px, 0.6vw, 11px);
   }
   .core-front > span:nth-child(2) {
-    font-size: 21px;
+    font-size: clamp(15px, 1.1vw, 21px);
   }
   .core-caption {
     font-size: 9px;
@@ -2341,90 +2366,8 @@ button {
   .diagram-label {
     font-size: 8px;
   }
-  .diagram-top,
-  .diagram-bottom {
-    font-size: 10px;
-  }
-  .diagram-bottom > span:first-child {
-    font-size: 12px;
-  }
   .diagram-note {
     font-size: 12px;
-  }
-  .section {
-    padding-block: 125px;
-  }
-  .stack-section {
-    padding-bottom: 0;
-  }
-  .feature-card {
-    padding: 35px;
-  }
-  .feature-card h3 {
-    font-size: 21px;
-  }
-  .feature-card p {
-    font-size: 14px;
-  }
-  .feature-tags > span {
-    font-size: 9px;
-  }
-  .config-layout {
-    gap: 150px;
-  }
-  .config-playground .code-block {
-    min-height: 390px;
-  }
-  .code-block pre {
-    font-size: 14px;
-  }
-  .desktop-nav a {
-    font-size: 14px;
-  }
-  .desktop-nav {
-    gap: 36px;
-  }
-  .header-inner {
-    height: 95px;
-  }
-  .header-actions {
-    gap: 23px;
-  }
-  .github-link {
-    font-size: 13px;
-  }
-  .tech-inner {
-    min-height: 120px;
-  }
-  .technology {
-    font-size: 22px;
-  }
-  .technology:nth-child(5),
-  .technology:nth-child(6) {
-    font-size: 19px;
-  }
-  .tech-label {
-    font-size: 10px;
-  }
-  .docs-layout {
-    grid-template-columns: 250px minmax(0, 1fr);
-    gap: 75px;
-  }
-  .docs-main h1 {
-    font-size: 62px;
-  }
-  .doc-body {
-    gap: 80px;
-    grid-template-columns: minmax(0, 1fr) 220px;
-  }
-  .doc-section p {
-    font-size: 16px;
-  }
-  .doc-section h2 {
-    font-size: 31px;
-  }
-  .doc-section .code-block pre {
-    font-size: 13px;
   }
   .docs-sidebar a {
     font-size: 13px;
@@ -2432,238 +2375,49 @@ button {
   .doc-toc a {
     font-size: 12px;
   }
-  .docs-cards {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-@media (min-width: 2600px) {
-  .container {
-    width: min(1920px, calc(100% - 240px));
-  }
-  .hero {
-    padding-block: 140px;
-    gap: 150px;
-  }
-  .hero h1 {
-    font-size: 132px;
-  }
-  .hero-description {
-    font-size: 22px;
-    max-width: 640px;
-  }
-  .button {
-    font-size: 16px;
-    padding: 16px 25px;
-  }
-  .hero-command {
-    max-width: 700px;
-    padding: 12px;
-  }
-  .hero-command code {
-    font-size: 12px;
-  }
-  .hero-trust {
-    font-size: 12px;
-  }
-  .release-badge {
-    font-size: 12px;
-    margin-bottom: 35px;
-  }
-  .diagram-input {
-    height: 55px;
+  .doc-section .code-block pre {
     font-size: 13px;
-    padding-inline: 15px;
-  }
-  .diagram-input > svg {
-    width: 22px;
-  }
-  .diagram-top,
-  .diagram-bottom {
-    padding: 20px 25px;
-    font-size: 12px;
-  }
-  .core-front > span:nth-child(2) {
-    font-size: 25px;
-  }
-  .core-caption {
-    font-size: 11px;
-  }
-  .diagram-label {
-    font-size: 10px;
-  }
-  .hero-visual {
-    padding-top: 60px;
-  }
-  .diagram-out {
-    font-size: 12px;
-  }
-  .diagram-note {
-    font-size: 14px;
-  }
-  .section {
-    padding-block: 150px;
-  }
-  .stack-section {
-    padding-bottom: 0;
-  }
-  h2 {
-    font-size: 64px;
-  }
-  .section-heading p {
-    font-size: 17px;
-    max-width: 470px;
-  }
-  .eyebrow {
-    font-size: 12px;
-  }
-  .feature-grid {
-    gap: 25px;
-  }
-  .feature-card {
-    padding: 40px;
-  }
-  .feature-card h3 {
-    font-size: 25px;
-  }
-  .feature-card p {
-    font-size: 16px;
-  }
-  .feature-tags > span {
-    font-size: 11px;
-  }
-  .feature-icon {
-    height: 50px;
-    width: 50px;
-  }
-  .tech-inner {
-    min-height: 145px;
-  }
-  .technology {
-    font-size: 26px;
-  }
-  .technology:nth-child(5),
-  .technology:nth-child(6) {
-    font-size: 23px;
-  }
-  .config-layout p,
-  .ai-layout p {
-    font-size: 18px;
-    max-width: 550px;
-  }
-  .check-list {
-    font-size: 15px;
-  }
-  .config-tabs button {
-    font-size: 13px;
-    padding: 20px;
-  }
-  .config-playground .code-block {
-    min-height: 465px;
-  }
-  .code-block pre {
-    font-size: 16px;
-  }
-  .code-top {
-    font-size: 12px;
-  }
-  .stack-story {
-    padding: 55px;
-  }
-  .stack-story h3 {
-    font-size: 40px;
-  }
-  .stack-story p {
-    font-size: 17px;
-    max-width: 440px;
-  }
-  .stack-parts strong {
-    font-size: 14px;
-  }
-  .stack-parts small {
-    font-size: 11px;
-  }
-  .stack-part-symbol {
-    height: 50px;
-    width: 50px;
-  }
-  .stack-result strong {
-    font-size: 19px;
-  }
-  .stack-result > div > span {
-    font-size: 12px;
-  }
-  .small-label {
-    font-size: 11px;
-  }
-  .segmented button {
-    font-size: 13px;
-  }
-  .stack-footnote {
-    font-size: 12px;
-  }
-  .dashboard-body {
-    grid-template-columns: 240px 1fr;
-    min-height: 460px;
-  }
-  .dashboard-content {
-    padding: 35px 45px;
-  }
-  .dashboard-sidebar > button {
-    font-size: 14px;
   }
   .dashboard-table > div {
-    font-size: 14px;
-    padding: 18px 8px;
+    font-size: 12px;
+    padding-block: 16px;
+  }
+  .dashboard-table .dashboard-table-head {
+    font-size: 9px;
   }
   .dashboard-stats > div > span:first-child {
+    font-size: 11px;
+  }
+  .dashboard-sidebar > button {
     font-size: 12px;
   }
-  .dashboard-stats strong {
-    font-size: 34px;
+  .dashboard-chrome {
+    font-size: 11px;
   }
-  .dashboard-below {
-    font-size: 15px;
+  .dashboard-note,
+  .dashboard-chrome .demo-label {
+    font-size: 10px;
   }
-  .mcp-message p {
-    font-size: 16px;
-  }
-  .mcp-operation {
-    font-size: 14px;
-  }
-  .mcp-tool {
-    font-size: 12px;
-  }
-  .mcp-card-top > span:first-child {
-    font-size: 15px;
-  }
-  .mcp-card {
-    padding-block: 6px;
-  }
-  .faq-section h2 {
-    font-size: 56px;
-  }
-  .faq-list summary {
-    font-size: 17px;
-    padding: 26px 0;
-  }
-  .faq-list details p {
-    font-size: 16px;
-  }
-  .footer-grid {
-    padding-block: 40px 65px;
+  .healthy {
+    font-size: 11px;
   }
   .footer-grid h3,
   .footer-grid > div:not(:first-child) > a,
   .footer-brand p {
-    font-size: 15px;
+    font-size: 13px;
   }
-  .footer-bottom {
-    font-size: 12px;
+}
+@media (min-width: 1680px) {
+  .feature-grid-catalog {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .docs-cards {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 @media (max-width: 1150px) {
-  .container {
-    width: calc(100% - 64px);
+  :root {
+    --page-gutter: 32px;
   }
   .header-inner {
     gap: 20px;
@@ -3211,8 +2965,8 @@ button {
   }
 }
 @media (max-width: 650px) {
-  .container {
-    width: calc(100% - 40px);
+  :root {
+    --page-gutter: 20px;
   }
   .announcement {
     height: 32px;
@@ -3982,8 +3736,8 @@ button {
   }
 }
 @media (max-width: 370px) {
-  .container {
-    width: calc(100% - 30px);
+  :root {
+    --page-gutter: 15px;
   }
   .hero h1 {
     font-size: 54px;
