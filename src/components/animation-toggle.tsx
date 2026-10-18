@@ -3,22 +3,22 @@
 import { useSyncExternalStore } from "react";
 import { Mouse, MouseOff } from "lucide-react";
 import {
-  backgroundAnimationsSnapshot,
-  subscribeBackgroundAnimations,
-  setBackgroundAnimations,
+  mouseEffectsSnapshot,
+  subscribeMouseEffects,
+  setMouseEffects,
 } from "@/lib/background-animations";
 
-export function useBackgroundAnimations() {
+function useMouseEffects() {
   return useSyncExternalStore(
-    subscribeBackgroundAnimations,
-    backgroundAnimationsSnapshot,
+    subscribeMouseEffects,
+    mouseEffectsSnapshot,
     () => false,
   );
 }
 
 export function AnimationToggle() {
-  const enabled = useBackgroundAnimations();
-  const label = enabled ? "Animasyonları kapat" : "Animasyonları aç";
+  const enabled = useMouseEffects();
+  const label = enabled ? "Disable mouse effects" : "Enable mouse effects";
   const Icon = enabled ? Mouse : MouseOff;
   return (
     <button
@@ -27,7 +27,7 @@ export function AnimationToggle() {
       aria-label={label}
       title={label}
       aria-pressed={enabled}
-      onClick={() => setBackgroundAnimations(!enabled)}
+      onClick={() => setMouseEffects(!enabled)}
     >
       <Icon size={18} aria-hidden="true" />
     </button>

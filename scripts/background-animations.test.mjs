@@ -2,12 +2,12 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { runInNewContext } from "node:vm";
 import {
-  BACKGROUND_ANIMATIONS_KEY,
-  resolveBackgroundAnimations,
-  backgroundAnimationsSnapshot,
-  subscribeBackgroundAnimations,
-  setBackgroundAnimations,
-  backgroundAnimationsScript,
+  MOUSE_EFFECTS_KEY,
+  resolveMouseEffects,
+  mouseEffectsSnapshot,
+  subscribeMouseEffects,
+  setMouseEffects,
+  mouseEffectsScript,
 } from "../src/lib/background-animations.ts";
 
 function browserBoundary(
@@ -18,9 +18,7 @@ function browserBoundary(
     media = new EventTarget();
   media.matches = reduced;
   const document = { documentElement: { dataset: {} } };
-  const values = new Map(
-    stored === null ? [] : [[BACKGROUND_ANIMATIONS_KEY, stored]],
-  );
+  const values = new Map(stored === null ? [] : [[MOUSE_EFFECTS_KEY, stored]]);
   const localStorage = {
     getItem(key) {
       if (blocked) throw new Error("Storage unavailable");
@@ -59,14 +57,14 @@ test("first-paint defaults follow reduced motion and explicit choices survive it
     ["invalid", true, false],
     ["invalid", false, true],
   ]) {
-    assert.equal(resolveBackgroundAnimations(stored, reduced), expected);
+    assert.equal(resolveMouseEffects(stored, reduced), expected);
     browserBoundary({ stored, reduced }, (boundary) => {
-      runInNewContext(backgroundAnimationsScript, boundary);
+      runInNewContext(mouseEffectsScript, boundary);
       assert.equal(
-        boundary.document.documentElement.dataset.backgroundAnimations,
+        boundary.document.documentElement.dataset.mouseEffects,
         expected ? "on" : "off",
       );
-      assert.equal(backgroundAnimationsSnapshot(), expected);
+      assert.equal(mouseEffectsSnapshot(), expected);
     });
   }
 });
@@ -74,60 +72,60 @@ test("first-paint defaults follow reduced motion and explicit choices survive it
 test("the toggle persists its choice and notifies subscribers; unsubscribe removes notifications", () => {
   browserBoundary({}, ({ values }) => {
     let updates = 0;
-    const unsubscribe = subscribeBackgroundAnimations(() => updates++);
-    assert.equal(backgroundAnimationsSnapshot(), true);
-    setBackgroundAnimations(false);
-    assert.equal(backgroundAnimationsSnapshot(), false);
-    assert.equal(values.get(BACKGROUND_ANIMATIONS_KEY), "off");
-    setBackgroundAnimations(true);
-    assert.equal(backgroundAnimationsSnapshot(), true);
-    assert.equal(values.get(BACKGROUND_ANIMATIONS_KEY), "on");
+    const unsubscribe = subscribeMouseEffects(() => updates++);
+    assert.equal(mouseEffectsSnapshot(), true);
+    setMouseEffects(false);
+    assert.equal(mouseEffectsSnapshot(), false);
+    assert.equal(values.get(MOUSE_EFFECTS_KEY), "off");
+    setMouseEffects(true);
+    assert.equal(mouseEffectsSnapshot(), true);
+    assert.equal(values.get(MOUSE_EFFECTS_KEY), "on");
     assert.equal(updates, 2);
     unsubscribe();
-    setBackgroundAnimations(false);
+    setMouseEffects(false);
     assert.equal(updates, 2);
   });
 });
 
 test("system changes follow the default until the user makes an explicit choice", () => {
   browserBoundary({}, ({ media }) => {
-    const unsubscribe = subscribeBackgroundAnimations(() => {});
+    const unsubscribe = subscribeMouseEffects(() => {});
     media.matches = true;
     media.dispatchEvent(new Event("change"));
-    assert.equal(backgroundAnimationsSnapshot(), false);
-    setBackgroundAnimations(true);
+    assert.equal(mouseEffectsSnapshot(), false);
+    setMouseEffects(true);
     media.dispatchEvent(new Event("change"));
-    assert.equal(backgroundAnimationsSnapshot(), true);
+    assert.equal(mouseEffectsSnapshot(), true);
     unsubscribe();
   });
 });
 
 test("cross-tab preferences synchronize and clearing storage restores the system default", () => {
   browserBoundary({ reduced: true }, ({ window }) => {
-    const unsubscribe = subscribeBackgroundAnimations(() => {});
+    const unsubscribe = subscribeMouseEffects(() => {});
     const storage = (key, newValue) =>
       window.dispatchEvent(
         Object.assign(new Event("storage"), { key, newValue }),
       );
-    storage(BACKGROUND_ANIMATIONS_KEY, "on");
-    assert.equal(backgroundAnimationsSnapshot(), true);
+    storage(MOUSE_EFFECTS_KEY, "on");
+    assert.equal(mouseEffectsSnapshot(), true);
     storage("uwas-theme", "light");
-    assert.equal(backgroundAnimationsSnapshot(), true);
+    assert.equal(mouseEffectsSnapshot(), true);
     storage(null, null);
-    assert.equal(backgroundAnimationsSnapshot(), false);
+    assert.equal(mouseEffectsSnapshot(), false);
     unsubscribe();
   });
 });
 
 test("blocked storage still respects reduced motion and allows an in-memory toggle", () => {
   browserBoundary({ reduced: true, blocked: true }, (boundary) => {
-    runInNewContext(backgroundAnimationsScript, boundary);
-    const unsubscribe = subscribeBackgroundAnimations(() => {});
-    assert.equal(backgroundAnimationsSnapshot(), false);
-    setBackgroundAnimations(true);
-    assert.equal(backgroundAnimationsSnapshot(), true);
+    runInNewContext(mouseEffectsScript, boundary);
+    const unsubscribe = subscribeMouseEffects(() => {});
+    assert.equal(mouseEffectsSnapshot(), false);
+    setMouseEffects(true);
+    assert.equal(mouseEffectsSnapshot(), true);
     boundary.media.dispatchEvent(new Event("change"));
-    assert.equal(backgroundAnimationsSnapshot(), true);
+    assert.equal(mouseEffectsSnapshot(), true);
     unsubscribe();
   });
 });

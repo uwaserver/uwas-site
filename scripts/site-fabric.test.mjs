@@ -13,6 +13,55 @@ const advance = (scene, seconds, hz = 60) => {
   for (let i = 0; i < seconds * hz; i++) scene.tick(1 / hz);
 };
 
+test("clearing mouse effects preserves ambient motion and its existing node pool", () => {
+  const scene = new RequestFabric(1440, 1000),
+    ambient = svgBoundary(),
+    effects = svgBoundary();
+  const renderer = createSvgFabric(
+    ambient.root,
+    scene,
+    "mouse-off",
+    effects.root,
+  );
+  scene.move(720, 450);
+  scene.pulse(720, 450);
+  advance(scene, 0.3);
+  renderer.draw(0, false);
+  const field = ambient.root.children[1];
+  const motif = field.children.find(
+    (node) =>
+      node.attributes.class === "fabric-motif" &&
+      Number(node.attributes.opacity) > 0,
+  );
+  const time = scene.time,
+    phase = scene.routes[0].phase;
+  scene.clearInteraction();
+  renderer.draw(0, false);
+  const transform = motif.attributes.transform;
+  assert.equal(scene.time, time);
+  assert.equal(scene.routes[0].phase, phase);
+  advance(scene, 1);
+  renderer.draw(0, false);
+  assert.equal(ambient.root.children[1], field);
+  assert.notEqual(scene.routes[0].phase, phase);
+  assert.notEqual(motif.attributes.transform, transform);
+  assert.equal(scene.pointer.strength, 0);
+  assert.equal(
+    scene.pulses.length +
+      scene.sparks.length +
+      scene.wakes.length +
+      scene.relays.length,
+    0,
+  );
+  assert.ok(
+    effects.root.children[1].children.every(
+      (node) =>
+        node.attributes.opacity === undefined ||
+        Number(node.attributes.opacity) === 0,
+    ),
+  );
+});
+
 test("rapid clicks retain a fixed effect budget and all effects expire", () => {
   const scene = new RequestFabric(1920, 950);
   for (let i = 0; i < 1000; i++) scene.pulse(500 + (i % 100), 100);

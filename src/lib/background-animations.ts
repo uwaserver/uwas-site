@@ -1,17 +1,15 @@
-export const BACKGROUND_ANIMATIONS_KEY = "uwas-background-animations";
+// Retain the original storage key so existing mouse-button choices survive.
+export const MOUSE_EFFECTS_KEY = "uwas-background-animations";
 const CHANGE_EVENT = "uwas:background-animations-change";
 const MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
-export function resolveBackgroundAnimations(
-  stored: string | null,
-  reduced: boolean,
-) {
+export function resolveMouseEffects(stored: string | null, reduced: boolean) {
   return stored === "on" ? true : stored === "off" ? false : !reduced;
 }
 
 function readPreference() {
   try {
-    return localStorage.getItem(BACKGROUND_ANIMATIONS_KEY);
+    return localStorage.getItem(MOUSE_EFFECTS_KEY);
   } catch {
     return null;
   }
@@ -19,9 +17,9 @@ function readPreference() {
 
 function applyPreference(preference: string | null) {
   const root = document.documentElement;
-  root.dataset.backgroundAnimationPreference =
+  root.dataset.mouseEffectPreference =
     preference === "on" || preference === "off" ? preference : "system";
-  root.dataset.backgroundAnimations = resolveBackgroundAnimations(
+  root.dataset.mouseEffects = resolveMouseEffects(
     preference,
     matchMedia(MOTION_QUERY).matches,
   )
@@ -29,29 +27,25 @@ function applyPreference(preference: string | null) {
     : "off";
 }
 
-export function backgroundAnimationsSnapshot() {
-  const current = document.documentElement.dataset.backgroundAnimations;
+export function mouseEffectsSnapshot() {
+  const current = document.documentElement.dataset.mouseEffects;
   return current === "on" || current === "off"
     ? current === "on"
-    : resolveBackgroundAnimations(
-        readPreference(),
-        matchMedia(MOTION_QUERY).matches,
-      );
+    : resolveMouseEffects(readPreference(), matchMedia(MOTION_QUERY).matches);
 }
 
-export function subscribeBackgroundAnimations(callback: () => void) {
+export function subscribeMouseEffects(callback: () => void) {
   const media = matchMedia(MOTION_QUERY);
   // The head script normally initializes this before the first paint.
-  if (!document.documentElement.dataset.backgroundAnimations)
+  if (!document.documentElement.dataset.mouseEffects)
     applyPreference(readPreference());
   const systemChanged = () => {
-    const preference =
-      document.documentElement.dataset.backgroundAnimationPreference;
+    const preference = document.documentElement.dataset.mouseEffectPreference;
     if (preference !== "on" && preference !== "off") applyPreference(null);
     callback();
   };
   const storageChanged = (event: StorageEvent) => {
-    if (event.key !== BACKGROUND_ANIMATIONS_KEY && event.key !== null) return;
+    if (event.key !== MOUSE_EFFECTS_KEY && event.key !== null) return;
     applyPreference(event.key === null ? null : event.newValue);
     callback();
   };
@@ -65,16 +59,16 @@ export function subscribeBackgroundAnimations(callback: () => void) {
   };
 }
 
-export function setBackgroundAnimations(enabled: boolean) {
+export function setMouseEffects(enabled: boolean) {
   const preference = enabled ? "on" : "off";
   applyPreference(preference);
   try {
-    localStorage.setItem(BACKGROUND_ANIMATIONS_KEY, preference);
+    localStorage.setItem(MOUSE_EFFECTS_KEY, preference);
   } catch {
     /* Keep the current choice in memory when storage is unavailable. */
   }
   window.dispatchEvent(new Event(CHANGE_EVENT));
 }
 
-/** Runs before hydration so saved/reduced-motion preferences cannot flash motion. */
-export const backgroundAnimationsScript = `(()=>{let p=null;try{p=localStorage.getItem('${BACKGROUND_ANIMATIONS_KEY}')}catch{}const r=document.documentElement;r.dataset.backgroundAnimationPreference=p==='on'||p==='off'?p:'system';r.dataset.backgroundAnimations=(p==='on'||(p!=='off'&&!matchMedia('${MOTION_QUERY}').matches))?'on':'off'})()`;
+/** Initialize only mouse effects; ambient motion independently follows the OS. */
+export const mouseEffectsScript = `(()=>{let p=null;try{p=localStorage.getItem('${MOUSE_EFFECTS_KEY}')}catch{}const r=document.documentElement;r.dataset.mouseEffectPreference=p==='on'||p==='off'?p:'system';r.dataset.mouseEffects=(p==='on'||(p!=='off'&&!matchMedia('${MOTION_QUERY}').matches))?'on':'off'})()`;

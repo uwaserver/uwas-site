@@ -1,12 +1,13 @@
 # Website validation
 
-## Header background-animation control, October 18, 2026
+## Header mouse-effects scope, October 18, 2026
 
-- Added a 44×44px mouse toggle beside the appearance control, with pressed state, slashed inactive icon, state-specific Turkish tooltip/accessible label and native keyboard activation. Preference is initialized before hydration, stored under `uwas-background-animations`, and defaults to the system reduced-motion setting until explicitly chosen.
-- `npm test`: 25 passed, including new preference/bootstrap, storage failure, subscription cleanup, cross-tab synchronization and system-default/explicit-choice coverage. Lint, TypeScript, production build and static export validation passed (30 HTML files / 27 canonical routes).
-- A temporary production-page fixture proved real lifecycle cleanup. Switching off removed the background pointer listeners (document counts 3→2, leaving React's delegation), scroll/leave/visibility listeners (1→0), and the pending scene frame (1→0). Active effects cleared, hero animation became `none`, and subsequent pointer replay left the scene callback count and SVG mutation count unchanged. Enter restarted one scene request and one listener set; ten toggles retained those counts.
-- A simulated first visit with reduced motion started off with no scene callbacks. Space explicitly enabled it. On the normal site, an off choice survived reload and navigation to Features. The appearance menu still used `theme-panel-in` and changed the palette while background animation remained off. Mobile navigation and reactivation worked.
-- Header geometry checked in dark mode at 320, 375, 650, 651, 700, 768, 1024, 1440 and 2560px and in light mode at 320, 375, 768 and 1440px: no overflow; button target remained 44×44px. Local evidence: `.qa/animation-toggle-lifecycle.json`, `animation-toggle-layout.json`, and the desktop/mobile toggle screenshots. Temporary probe files are excluded from publication.
+- The header button now controls only pointer/click effects. English tooltip and accessible labels are `Disable mouse effects` / `Enable mouse effects`. The existing localStorage key remains compatible with saved choices.
+- `npm test`: 26 passed. New renderer coverage verifies that clearing mouse reactions preserves the scene timeline, route progression, motif drift and existing SVG nodes. Lint, TypeScript and production build passed.
+- In the production-page lifecycle fixture, mouse-off removed the five background pointer listeners (pointer move/down/up counts 3 to 2, leaving React delegation; pointerleave 1 to 0), retained one pending ambient frame and the scroll/visibility listeners, and kept hero `flow` animation active. Callback counts and motif transforms continued advancing while the interaction overlay was hidden. Pointer replay and ten toggle cycles retained a fixed 507-node pool and one animation request. Enter restored one pointer listener set.
+- Simulated OS reduced motion independently switched the field to `reduced`, removed pointer input and held the callback count at 307 with zero pending animation frames, even with a saved mouse preference on. This fixture mocks the JavaScript media query; it does not emulate the browser's CSS media evaluation.
+- On the normal production export, mouse-off survived reload while ambient motion remained active; glow opacity and active pulse count were both zero. Desktop dark and 375px mobile light had no document overflow and retained the 44x44px target. Space enabled mouse effects on mobile. Earlier full header breakpoint measurements remain in `.qa/animation-toggle-layout.json`.
+- Local evidence: `.qa/mouse-scope-lifecycle.json`, `mouse-scope-desktop-dark.jpg`, `mouse-scope-mobile-light.jpg`. Temporary fixture files are removed before export validation and publication.
 
 ## Organic orbits and chained reactions, October 18, 2026
 

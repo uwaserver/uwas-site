@@ -4,7 +4,10 @@ import { useEffect, useId, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { FABRIC, RequestFabric, isFabricTap } from "@/lib/site-fabric";
 import { createSvgFabric } from "@/lib/site-fabric-svg";
-import { useBackgroundAnimations } from "./animation-toggle";
+import {
+  mouseEffectsSnapshot,
+  subscribeMouseEffects,
+} from "@/lib/background-animations";
 
 /** One persistent, decorative SVG field shared by every route. */
 export function SiteBackground() {
@@ -12,13 +15,14 @@ export function SiteBackground() {
   const effectsRef = useRef<SVGSVGElement>(null);
   const id = useId().replaceAll(":", "");
   const pathname = usePathname();
-  const enabled = useBackgroundAnimations();
 
   useEffect(() => {
     const svg = ref.current;
     const effects = effectsRef.current;
     if (!svg || !effects) return;
     const scene = new RequestFabric(1, 1);
+    const motion = matchMedia("(prefers-reduced-motion: reduce)");
+    let inputAttached = false;
     let visible = false,
       disposed = false;
     let frame = 0,
@@ -42,37 +46,12 @@ export function SiteBackground() {
       effects!.dataset.sceneState = value;
       document.documentElement.dataset.fabricState = value;
     }
-    if (!enabled) {
-      let cancelled = false;
-      function renderStill() {
-        if (cancelled) return;
-        const rect = svg!.getBoundingClientRect();
-        scene.resize(rect.width, rect.height);
-        const still = createSvgFabric(svg!, scene, id, effects!);
-        still.updateQuietZones();
-        still.draw(0, true);
-        state("off");
-      }
-      renderStill();
-      // A layout observer keeps static density correct on rotation/resizing.
-      // No pointer, scroll, visibility listeners or animation requests run here.
-      const viewport = new ResizeObserver(renderStill);
-      viewport.observe(svg);
-      return () => {
-        cancelled = true;
-        viewport.disconnect();
-        scene.clearInteraction();
-        svg.replaceChildren();
-        effects.replaceChildren();
-        delete document.documentElement.dataset.fabricState;
-      };
-    }
     function paint() {
       if (dirty) {
         renderer.updateQuietZones();
         dirty = false;
       }
-      renderer.draw(window.scrollY, false);
+      renderer.draw(window.scrollY, motion.matches);
     }
     function stop() {
       cancelAnimationFrame(frame);
@@ -85,7 +64,7 @@ export function SiteBackground() {
     }
     function animate(now: number) {
       frame = 0;
-      if (disposed || !visible || document.hidden) return;
+      if (disposed || !visible || document.hidden || motion.matches) return;
       const interval =
         1000 /
         (scene.mobile
@@ -112,8 +91,9 @@ export function SiteBackground() {
       stop();
       if (disposed || !visible || document.hidden || !renderer) return;
       dirty = true;
-      state("running");
+      state(motion.matches ? "reduced" : "running");
       paint();
+      if (motion.matches) return;
       frame = requestAnimationFrame(animate);
     }
     function resize() {
@@ -171,11 +151,41 @@ export function SiteBackground() {
       tap = null;
       scene.leave();
     }
+    function detachInput() {
+      if (!inputAttached) return;
+      document.removeEventListener("pointermove", move);
+      document.removeEventListener("pointerdown", down);
+      document.removeEventListener("pointerup", up);
+      document.removeEventListener("pointerleave", leave);
+      document.removeEventListener("pointercancel", leave);
+      inputAttached = false;
+    }
+    function syncInput() {
+      if (disposed) return;
+      detachInput();
+      tap = null;
+      scene.clearInteraction();
+      if (mouseEffectsSnapshot() && !motion.matches) {
+        document.addEventListener("pointermove", move, { passive: true });
+        document.addEventListener("pointerdown", down, { passive: true });
+        document.addEventListener("pointerup", up, { passive: true });
+        document.addEventListener("pointerleave", leave, { passive: true });
+        document.addEventListener("pointercancel", leave, { passive: true });
+        inputAttached = true;
+      }
+      // Reset only transient input, preserving ambient time, nodes and RAF.
+      if (renderer) paint();
+    }
+    function motionChanged() {
+      syncInput();
+      sync();
+    }
     function scroll() {
       tap = null;
       // Both SVGs use viewport/client coordinates. Scrolling changes the prose
       // masks and parallax, never the pointer anchor or an in-flight ripple.
       dirty = true;
+      if (motion.matches && renderer && !document.hidden) paint();
     }
     const observer = new IntersectionObserver((entries) => {
       if (disposed) return;
@@ -200,13 +210,11 @@ export function SiteBackground() {
     const viewportObserver = new ResizeObserver(resize);
     viewportObserver.observe(svg);
     window.addEventListener("scroll", scroll, { passive: true });
-    document.addEventListener("pointermove", move, { passive: true });
-    document.addEventListener("pointerdown", down, { passive: true });
-    document.addEventListener("pointerup", up, { passive: true });
-    document.addEventListener("pointerleave", leave, { passive: true });
-    document.addEventListener("pointercancel", leave, { passive: true });
     document.addEventListener("visibilitychange", sync);
+    motion.addEventListener("change", motionChanged);
+    const unsubscribeInput = subscribeMouseEffects(syncInput);
     resize();
+    syncInput();
     return () => {
       disposed = true;
       stop();
@@ -214,17 +222,15 @@ export function SiteBackground() {
       resizeObserver.disconnect();
       viewportObserver.disconnect();
       window.removeEventListener("scroll", scroll);
-      document.removeEventListener("pointermove", move);
-      document.removeEventListener("pointerdown", down);
-      document.removeEventListener("pointerup", up);
-      document.removeEventListener("pointerleave", leave);
-      document.removeEventListener("pointercancel", leave);
+      unsubscribeInput();
+      detachInput();
+      motion.removeEventListener("change", motionChanged);
       document.removeEventListener("visibilitychange", sync);
       svg.replaceChildren();
       effects.replaceChildren();
       delete document.documentElement.dataset.fabricState;
     };
-  }, [id, pathname, enabled]);
+  }, [id, pathname]);
 
   return (
     <>
