@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Logo } from "./brand";
 import { ThemePicker } from "./theme-picker";
+import { AnimationToggle } from "./animation-toggle";
 import { OxogStudio } from "./oxog-studio";
 import { docs, REPO, VERSION } from "@/lib/content";
 
@@ -238,6 +239,7 @@ export function Header() {
               <kbd>⌘ K</kbd>
             </button>
             <ThemePicker />
+            <AnimationToggle />
             <a
               className="github-link"
               href={REPO}

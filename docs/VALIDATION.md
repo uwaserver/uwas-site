@@ -1,5 +1,13 @@
 # Website validation
 
+## Header background-animation control, October 18, 2026
+
+- Added a 44×44px mouse toggle beside the appearance control, with pressed state, slashed inactive icon, state-specific Turkish tooltip/accessible label and native keyboard activation. Preference is initialized before hydration, stored under `uwas-background-animations`, and defaults to the system reduced-motion setting until explicitly chosen.
+- `npm test`: 25 passed, including new preference/bootstrap, storage failure, subscription cleanup, cross-tab synchronization and system-default/explicit-choice coverage. Lint, TypeScript, production build and static export validation passed (30 HTML files / 27 canonical routes).
+- A temporary production-page fixture proved real lifecycle cleanup. Switching off removed the background pointer listeners (document counts 3→2, leaving React's delegation), scroll/leave/visibility listeners (1→0), and the pending scene frame (1→0). Active effects cleared, hero animation became `none`, and subsequent pointer replay left the scene callback count and SVG mutation count unchanged. Enter restarted one scene request and one listener set; ten toggles retained those counts.
+- A simulated first visit with reduced motion started off with no scene callbacks. Space explicitly enabled it. On the normal site, an off choice survived reload and navigation to Features. The appearance menu still used `theme-panel-in` and changed the palette while background animation remained off. Mobile navigation and reactivation worked.
+- Header geometry checked in dark mode at 320, 375, 650, 651, 700, 768, 1024, 1440 and 2560px and in light mode at 320, 375, 768 and 1440px: no overflow; button target remained 44×44px. Local evidence: `.qa/animation-toggle-lifecycle.json`, `animation-toggle-layout.json`, and the desktop/mobile toggle screenshots. Temporary probe files are excluded from publication.
+
 ## Organic orbits and chained reactions, October 18, 2026
 
 - Added damped orbital motion and depth-dependent turning without changing text masks or foreground layer opacity. A click can relay through two shape-to-shape hops, with two branches per wave and one visit per shape per cascade. Relay pools are capped at 4 mobile / 10 desktop; each hop loses 42% of its energy and lasts 0.8s. Rapid clicks also cap spin, velocity and response brightness.

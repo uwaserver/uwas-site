@@ -20,3 +20,11 @@ Both SVGs are `aria-hidden`, unfocusable and have `pointer-events: none`. Docume
 ## Verification
 
 `npm test` covers interaction budgets/expiry, stronger local forces, separation of prose masks and foreground effects, client-space ripple anchoring during scroll, tap/drag discrimination, frame-rate independence, geometric distribution, bounded parallax, static reduced-motion SVG output, stable node allocation under sustained clicking, and offscreen transform culling. Browser findings are recorded in `VALIDATION.md`. Screenshots and measurement files are retained locally under ignored `.qa/`.
+
+## Header animation control
+
+The mouse button beside `ThemePicker` controls the shared background and decorative hero flow lines. Its pressed state, native tooltip and accessible action label follow the current choice (`Animasyonları kapat` / `Animasyonları aç`). Both desktop and mobile have a 44px touch target and native Enter/Space support. Theme menus, content reveals, functional controls and the OXOG brand animation remain independent.
+
+`src/lib/background-animations.ts` owns the `uwas-background-animations` localStorage preference. With no valid saved value it follows `prefers-reduced-motion`; an explicit `on` or `off` choice wins until changed or cleared. A head script applies the preference before hydration to prevent a flash of unwanted motion. Same-tab notifications, storage events and system preference changes synchronize the control and renderer. When storage is blocked, the current document retains its choice in memory.
+
+Switching off disposes the active simulation, clears its transient geometry, cancels its animation frame, disconnects its animation observers and removes pointer/scroll/visibility listeners. A static ambient field remains, with one viewport ResizeObserver to preserve responsive geometry; the interactive layer is hidden and hero flow has no CSS animation. Switching on creates a fresh scene and one animation loop. Preference listeners remain available to reactivate the scene; no per-frame React state is introduced.

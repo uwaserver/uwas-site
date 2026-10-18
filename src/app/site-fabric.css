@@ -72,6 +72,13 @@ body .ai-section {
 :root[data-fabric-state="paused"] .flow-lines {
   animation-play-state: paused;
 }
+:root[data-background-animations="off"] .site-fabric,
+:root[data-background-animations="off"] .flow-lines {
+  animation: none;
+}
+:root[data-background-animations="off"] .site-fabric-effects {
+  display: none;
+}
 @keyframes fabric-arrive {
   from {
     opacity: 0;
@@ -83,6 +90,11 @@ body .ai-section {
 @media (prefers-reduced-motion: reduce) {
   .site-fabric {
     animation: none;
+  }
+  /* An explicit opt-in affects only this decorative SVG, never UI motion. */
+  :root[data-background-animation-preference="on"] .flow-lines {
+    animation-duration: 9s !important;
+    animation-iteration-count: infinite !important;
   }
 }
 @media print {

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Footer, Header } from "@/components/ui";
 import { REPO } from "@/lib/content";
 import { SiteBackground } from "@/components/site-background";
+import { backgroundAnimationsScript } from "@/lib/background-animations";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -51,6 +52,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script
+          dangerouslySetInnerHTML={{ __html: backgroundAnimationsScript }}
+        />
       </head>
       <body>
         <SiteBackground />
