@@ -48,6 +48,7 @@ body > footer,
 .fabric-wake,
 .fabric-echo,
 .fabric-orbit,
+.fabric-relay,
 .fabric-connection {
   stroke: currentColor;
 }

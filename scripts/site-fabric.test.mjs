@@ -249,6 +249,11 @@ test("SVG node allocation stays fixed under sustained interaction and expires ba
     scene.move(700, 500);
     scene.tick(1 / 60);
     renderer.draw(i * 20, false);
+    assert.ok(
+      scene.motions.every(
+        (motion) => motion.energy <= 1 && Math.abs(motion.spin) <= 48,
+      ),
+    );
   }
   assert.equal(boundary.count() + effects.count(), allocated);
   advance(scene, 4);
@@ -325,5 +330,104 @@ test("scroll parallax never moves the client-space pointer or active click origi
     assert.equal(scene.pointer.x, 720);
     assert.equal(scene.pointer.y, 450);
     assert.ok(Number(pulse.attributes.opacity) > 0);
+  }
+});
+
+test("motifs orbit smoothly and settle after the cursor leaves", () => {
+  const scene = new RequestFabric(1440, 1000),
+    index = 15;
+  const start = scene.motifPoint(index);
+  const pointer = { x: start.x - 90, y: start.y };
+  scene.move(pointer.x, pointer.y);
+  scene.tick(1 / 60);
+  assert.ok(
+    Math.hypot(scene.motions[index].x, scene.motions[index].y) < 2,
+    "spring starts without a jump",
+  );
+  advance(scene, 2);
+  const orbit = scene.motifPoint(index);
+  assert.ok(
+    Math.atan2(orbit.y - pointer.y, orbit.x - pointer.x) > 0.15,
+    "nearby shapes follow a curved orbit",
+  );
+  const before = { ...orbit };
+  scene.move(pointer.x + 210, pointer.y - 90);
+  scene.tick(1 / 60);
+  const after = scene.motifPoint(index);
+  assert.ok(
+    Math.hypot(after.x - before.x, after.y - before.y) < 15,
+    "abrupt pointer movement cannot teleport a shape",
+  );
+  scene.leave();
+  advance(scene, 4);
+  assert.ok(Math.hypot(scene.motions[index].x, scene.motions[index].y) < 0.01);
+});
+
+test("spring orbits remain consistent at 30Hz and 144Hz", () => {
+  const a = new RequestFabric(1440, 1000),
+    b = new RequestFabric(1440, 1000);
+  const point = a.motifPoint(15);
+  a.move(point.x - 90, point.y);
+  b.move(point.x - 90, point.y);
+  advance(a, 2, 30);
+  advance(b, 2, 144);
+  const left = a.motifPoint(15),
+    right = b.motifPoint(15);
+  assert.ok(Math.hypot(left.x - right.x, left.y - right.y) < 3.5);
+});
+
+test("clicks propagate through shapes beyond the first wave with bounded, non-repeating hops", () => {
+  for (const [width, height] of [
+    [1440, 1000],
+    [375, 844],
+  ]) {
+    const scene = new RequestFabric(width, height);
+    // Author a sparse chain as geometric input to the real simulation.
+    scene.motifs.forEach((motif) => {
+      motif.x = -1000;
+    });
+    const positions = width > 650 ? [180, 335, 470] : [70, 160, 245];
+    positions.forEach((x, i) =>
+      Object.assign(scene.motifs[i], { x, y: 400, phase: 0, depth: 0.7 }),
+    );
+    const origin = width > 650 ? 100 : 20;
+    scene.pulse(origin, 400);
+    const observed = new Set();
+    let lastShapeReacted = false,
+      hops = 0;
+    for (let i = 0; i < 180; i++) {
+      scene.tick(1 / 60);
+      lastShapeReacted ||= scene.motions[2].energy > 0.01;
+      for (const relay of scene.relays) {
+        observed.add(relay);
+        hops = Math.max(hops, relay.generation);
+      }
+      assert.ok(
+        scene.relays.length <=
+          (scene.mobile ? FABRIC.maxRelays.mobile : FABRIC.maxRelays.desktop),
+      );
+    }
+    assert.ok(
+      lastShapeReacted,
+      "a shape outside the click radius must receive a relayed reaction",
+    );
+    assert.equal(hops, FABRIC.relayHops);
+    assert.equal(
+      new Set([...observed].map((relay) => relay.source)).size,
+      observed.size,
+      "each shape relays once per click",
+    );
+    advance(scene, 3);
+    assert.equal(scene.relays.length + scene.pulses.length, 0);
+    assert.ok(scene.motions.every((motion) => motion.energy < 0.001));
+    scene.pulse(origin, 400);
+    advance(scene, 0.4);
+    scene.clearInteraction();
+    assert.equal(scene.relays.length, 0);
+    assert.ok(
+      scene.motions.every(
+        (motion) => motion.energy === 0 && motion.x === 0 && motion.y === 0,
+      ),
+    );
   }
 });

@@ -1,5 +1,13 @@
 # Website validation
 
+## Organic orbits and chained reactions, October 18, 2026
+
+- Added damped orbital motion and depth-dependent turning without changing text masks or foreground layer opacity. A click can relay through two shape-to-shape hops, with two branches per wave and one visit per shape per cascade. Relay pools are capped at 4 mobile / 10 desktop; each hop loses 42% of its energy and lasts 0.8s. Rapid clicks also cap spin, velocity and response brightness.
+- `npm test`: 20 passed. Added coverage for smooth orbit onset, no teleporting after an abrupt cursor move, return to rest, comparable motion at 30Hz/144Hz, and two-hop propagation to a shape outside the initial click radius on desktop and mobile. Existing static reduced-motion, offscreen culling, node allocation, input and scroll tests passed.
+- Production browser checks covered 375, 768, 1440 and 2560px in both themes: no overflow; combined SVG pools stayed at 301 / 507 / 571 nodes. A 100-touch replay reached the mobile four-relay limit without growing the pool. A desktop click produced visible relay arcs; card-hover samples followed changing curved positions and rotations while prose stayed readable.
+- A temporary production-page fixture measured JavaScript animation callbacks: the 34-frame orbit sample had median 1.9ms / p95 5.6ms; the 73-frame click sample had median 2.2ms / p95 4.9ms. These measure callback execution, not paint time or achieved FPS. Reduced motion switched to `still`, with zero pending animation requests.
+- Lint, TypeScript, production build and static export validation passed (30 HTML files / 27 canonical routes). Local browser evidence is retained in `.qa/organic-motion-checks.json` and `organic-motion-final-dark.jpg`; temporary probe files were removed before export validation and publication.
+
 ## Continuous interaction overlay, October 18, 2026
 
 - Reproduced the occlusion: the original SVG used z-index 0 below content at 1, opaque cards hid its effects, and click waves shared the prose mask. Scrolling also cleared the entire interaction state. Two regression tests failed before the layer/force changes; their locality control passed.

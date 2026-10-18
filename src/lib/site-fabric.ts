@@ -10,6 +10,11 @@ export const FABRIC = {
   pointerForce: { mobile: 38, desktop: 68 },
   pulseRadius: { mobile: 165, desktop: 310 },
   pulseForce: 52,
+  orbitTravel: { mobile: 44, desktop: 88 },
+  maxRelays: { mobile: 4, desktop: 10 },
+  relayRadius: { mobile: 110, desktop: 180 },
+  relayLife: 0.8,
+  relayHops: 2,
   pulseLife: 2.1,
   maxPulses: 6,
   maxSparks: 72,
@@ -84,7 +89,24 @@ export type Route = {
   speed: number;
   phase: number;
 };
-export type Pulse = Point & { age: number; variant: number; radius: number };
+export type Pulse = Point & {
+  age: number;
+  variant: number;
+  radius: number;
+  root: number;
+  generation: number;
+  children: number;
+  energy: number;
+};
+export type Relay = Pulse & { source: number; from: Point };
+type Cascade = { id: number; born: number; seen: Uint8Array };
+type MotifMotion = Point & {
+  vx: number;
+  vy: number;
+  orbit: number;
+  spin: number;
+  energy: number;
+};
 type Spark = Point & {
   vx: number;
   vy: number;
@@ -120,6 +142,11 @@ export class RequestFabric {
   pulses: Pulse[] = [];
   sparks: Spark[] = [];
   wakes: Wake[] = [];
+  motifs: Motif[] = [];
+  motions: MotifMotion[] = [];
+  relays: Relay[] = [];
+  scroll = 0;
+  private cascades: Cascade[] = [];
   pointer = { x: -1000, y: -1000, strength: 0, inside: false };
   zones: QuietZone[] = [];
   private lastWake = -100;
@@ -133,6 +160,16 @@ export class RequestFabric {
     this.height = Math.max(1, height);
     this.mobile = width <= FABRIC.mobileBreakpoint;
     this.clearInteraction();
+    this.motifs = createMotifs(this.width, this.height);
+    this.motions = this.motifs.map(() => ({
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      orbit: 0,
+      spin: 0,
+      energy: 0,
+    }));
     const count = this.mobile ? FABRIC.routes.mobile : FABRIC.routes.desktop;
     this.routes = Array.from({ length: count }, (_, i) => {
       const band = i / (count - 1);
@@ -191,8 +228,28 @@ export class RequestFabric {
     const radius = this.mobile
       ? FABRIC.pulseRadius.mobile
       : FABRIC.pulseRadius.desktop;
-    const variant = this.sequence++ % 3;
-    this.pulses.push({ x, y, age: 0, radius, variant });
+    const root = this.sequence++;
+    const variant = root % 3;
+    this.cascades.push({
+      id: root,
+      born: this.time,
+      seen: new Uint8Array(this.motifs.length),
+    });
+    if (this.cascades.length > FABRIC.maxPulses) {
+      const expired = this.cascades.shift()!;
+      this.relays = this.relays.filter((relay) => relay.root !== expired.id);
+    }
+    this.pulses.push({
+      x,
+      y,
+      age: 0,
+      radius,
+      variant,
+      root,
+      generation: 0,
+      children: 0,
+      energy: 1,
+    });
     if (this.pulses.length > FABRIC.maxPulses) this.pulses.shift();
     const count = this.mobile ? 6 : 12;
     for (let i = 0; i < count; i++) {
@@ -215,6 +272,18 @@ export class RequestFabric {
     this.pulses = [];
     this.sparks = [];
     this.wakes = [];
+    this.relays = [];
+    this.cascades = [];
+    for (const motion of this.motions)
+      Object.assign(motion, {
+        x: 0,
+        y: 0,
+        vx: 0,
+        vy: 0,
+        orbit: 0,
+        spin: 0,
+        energy: 0,
+      });
     this.pointer.inside = false;
     this.pointer.strength = 0;
     this.lastInput = -100;
@@ -228,6 +297,12 @@ export class RequestFabric {
     this.pointer.strength +=
       (target - this.pointer.strength) * (1 - Math.exp(-dt * 5));
     this.pulses = this.pulses.filter((p) => (p.age += dt) < FABRIC.pulseLife);
+    this.relays = this.relays.filter((p) => (p.age += dt) < FABRIC.relayLife);
+    this.cascades = this.cascades.filter(
+      (c) =>
+        this.time - c.born <
+        FABRIC.pulseLife + FABRIC.relayLife * FABRIC.relayHops,
+    );
     this.wakes = this.wakes.filter((p) => (p.age += dt) < FABRIC.wakeLife);
     this.sparks = this.sparks.filter((p) => {
       p.age += dt;
@@ -240,6 +315,163 @@ export class RequestFabric {
     for (const route of this.routes)
       route.phase =
         (route.phase + route.speed * dt * (this.active ? 1 : 0.55)) % 1;
+    this.flowMotifs(dt);
+  }
+
+  motifPoint(index: number, reduced = false) {
+    const motif = this.motifs[index],
+      motion = this.motions[index];
+    const base = motifPosition(
+      motif,
+      this.time,
+      this.scroll,
+      this.height,
+      reduced,
+    );
+    return {
+      x: base.x + (reduced ? 0 : motion.x),
+      y: base.y + (reduced ? 0 : motion.y),
+      rotation: reduced
+        ? 0
+        : Math.sin(this.time * 0.1 + motif.phase) * 12 +
+          Math.sin(motion.orbit) * this.pointer.strength * 18 +
+          motion.spin,
+      energy: reduced ? 0 : motion.energy,
+    };
+  }
+
+  private flowMotifs(dt: number) {
+    const radius = this.mobile
+      ? FABRIC.pointerRadius.mobile
+      : FABRIC.pointerRadius.desktop;
+    const travel = this.mobile
+      ? FABRIC.orbitTravel.mobile
+      : FABRIC.orbitTravel.desktop;
+    for (let i = 0; i < this.motifs.length; i++) {
+      const motif = this.motifs[i],
+        motion = this.motions[i];
+      const base = motifPosition(motif, this.time, this.scroll, this.height);
+      motion.energy *= Math.exp(-dt * 4.5);
+      motion.spin *= Math.exp(-dt * 5);
+      // Offscreen shapes have no spring/orbit work and cannot relay a wave.
+      if (
+        base.y < -60 ||
+        base.y > this.height + 60 ||
+        base.x < -60 ||
+        base.x > this.width + 60
+      ) {
+        motion.x =
+          motion.y =
+          motion.vx =
+          motion.vy =
+          motion.energy =
+          motion.spin =
+            0;
+        continue;
+      }
+      const dx = base.x - this.pointer.x,
+        dy = base.y - this.pointer.y;
+      const distance = Math.hypot(dx, dy);
+      const influence =
+        ease(clamp(1 - distance / radius)) * this.pointer.strength;
+      motion.orbit += dt * (0.85 + motif.depth * 0.25) * influence;
+      const angle = motion.orbit;
+      const displaced = this.displace(base, motif.depth);
+      let tx =
+        displaced.x -
+        base.x +
+        ((Math.cos(angle) - 1) * dx - Math.sin(angle) * dy) * influence;
+      let ty =
+        displaced.y -
+        base.y +
+        (Math.sin(angle) * dx + (Math.cos(angle) - 1) * dy) * influence;
+      const length = Math.hypot(tx, ty);
+      if (length > travel) {
+        tx *= travel / length;
+        ty *= travel / length;
+      }
+      // Exact critically damped spring: the cursor can move abruptly, shapes cannot.
+      const omega = 7 + motif.depth * 2,
+        decay = Math.exp(-omega * dt);
+      const ax = motion.x - tx,
+        ay = motion.y - ty;
+      const bx = motion.vx + omega * ax,
+        by = motion.vy + omega * ay;
+      motion.x = tx + (ax + bx * dt) * decay;
+      motion.y = ty + (ay + by * dt) * decay;
+      motion.vx = (motion.vx - omega * bx * dt) * decay;
+      motion.vy = (motion.vy - omega * by * dt) * decay;
+    }
+    // A newly struck shape starts its wave on the next tick. Each cascade can
+    // visit a shape once, branch twice, and travel at most two hops.
+    if (!this.pulses.length && !this.relays.length) return;
+    const positions = this.motifs.map((_, i) => this.motifPoint(i));
+    const waves = [...this.pulses, ...this.relays];
+    for (const wave of waves) {
+      const cascade = this.cascades.find((c) => c.id === wave.root);
+      if (!cascade) continue;
+      const life = wave.generation ? FABRIC.relayLife : FABRIC.pulseLife;
+      const front = wave.radius * (1 - (1 - wave.age / life) ** 3);
+      for (let i = 0; i < this.motifs.length; i++) {
+        if (cascade.seen[i]) continue;
+        const point = positions[i];
+        if (
+          point.x < 0 ||
+          point.x > this.width ||
+          point.y < 0 ||
+          point.y > this.height
+        )
+          continue;
+        const dx = point.x - wave.x,
+          dy = point.y - wave.y,
+          distance = Math.hypot(dx, dy);
+        if (distance > front || distance > wave.radius) continue;
+        cascade.seen[i] = 1;
+        const motion = this.motions[i];
+        motion.energy = Math.min(1, motion.energy + wave.energy);
+        motion.spin = clamp(
+          motion.spin + (i % 2 ? 1 : -1) * 32 * wave.energy,
+          -48,
+          48,
+        );
+        if (distance > 0) {
+          motion.vx = clamp(
+            motion.vx + ((dx - dy * 0.35) / distance) * 65 * wave.energy,
+            -180,
+            180,
+          );
+          motion.vy = clamp(
+            motion.vy + ((dy + dx * 0.35) / distance) * 65 * wave.energy,
+            -180,
+            180,
+          );
+        }
+        const limit = this.mobile
+          ? FABRIC.maxRelays.mobile
+          : FABRIC.maxRelays.desktop;
+        if (
+          wave.generation < FABRIC.relayHops &&
+          wave.children < 2 &&
+          this.relays.length < limit
+        ) {
+          wave.children++;
+          this.relays.push({
+            ...point,
+            age: 0,
+            radius: this.mobile
+              ? FABRIC.relayRadius.mobile
+              : FABRIC.relayRadius.desktop,
+            root: wave.root,
+            variant: wave.variant,
+            generation: wave.generation + 1,
+            children: 0,
+            energy: wave.energy * 0.58,
+            source: i,
+            from: { x: wave.x, y: wave.y },
+          });
+        }
+      }
+    }
   }
 
   /** Local interaction only: distant objects keep their original position. */

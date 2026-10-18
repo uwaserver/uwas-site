@@ -69,6 +69,7 @@ export function SiteBackground() {
             ? FABRIC.fps.active
             : FABRIC.fps.idle);
       if (!lastDraw || now - lastDraw >= interval - 1) {
+        scene.scroll = window.scrollY;
         scene.tick(previous ? (now - previous) / 1000 : 0);
         previous = now;
         lastDraw = now;

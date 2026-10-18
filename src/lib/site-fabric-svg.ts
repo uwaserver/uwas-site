@@ -1,9 +1,4 @@
-import {
-  FABRIC,
-  RequestFabric,
-  createMotifs,
-  motifPosition,
-} from "./site-fabric.ts";
+import { FABRIC, RequestFabric } from "./site-fabric.ts";
 
 const NS = "http://www.w3.org/2000/svg";
 const n = (value: number) => value.toFixed(2);
@@ -117,11 +112,17 @@ export function createSvgFabric(
     height: scene.height,
     "mask-type": "luminance",
   });
-  const influenceNodes = Array.from({ length: FABRIC.maxPulses + 1 }, () => {
-    const node = element("circle", { r: 0, fill: `url(#${id}-local)` });
-    localMask.append(node);
-    return node;
-  });
+  const relayBudget = scene.mobile
+    ? FABRIC.maxRelays.mobile
+    : FABRIC.maxRelays.desktop;
+  const influenceNodes = Array.from(
+    { length: FABRIC.maxPulses + relayBudget + 1 },
+    () => {
+      const node = element("circle", { r: 0, fill: `url(#${id}-local)` });
+      localMask.append(node);
+      return node;
+    },
+  );
   effectDefs.append(localGradient, glowGradient, localMask);
   const foreground = element("g", {
     fill: "none",
@@ -139,7 +140,7 @@ export function createSvgFabric(
   const local = element("g", { mask: `url(#${id}-interaction)` });
   foreground.append(glow, local, orbit);
   effects.append(effectDefs, foreground);
-  const motifs = createMotifs(scene.width, scene.height);
+  const motifs = scene.motifs;
   const motifNodes = motifs.map((motif) => {
     const group = element("g", { class: "fabric-motif", opacity: 0 });
     group.append(element("path", { d: glyphs[motif.kind] }));
@@ -198,6 +199,14 @@ export function createSvgFabric(
     foreground.append(group);
     return { group, circle, diamond, core };
   });
+  const relayNodes = Array.from({ length: relayBudget }, () => {
+    const group = element("g", { class: "fabric-relay", opacity: 0 });
+    const arc = element("path");
+    const ring = element("circle", { r: 0 });
+    group.append(arc, ring);
+    foreground.append(group);
+    return { group, arc, ring };
+  });
   const sparks = Array.from({ length: FABRIC.maxSparks }, () => {
     const node = element("rect", {
       class: "fabric-packet",
@@ -251,6 +260,7 @@ export function createSvgFabric(
   }
 
   function draw(scroll: number, reduced: boolean) {
+    scene.scroll = scroll;
     let visible = 0;
     const radius = scene.mobile
       ? FABRIC.pointerRadius.mobile
@@ -264,14 +274,15 @@ export function createSvgFabric(
       pointerInfluence.setAttribute("r", n(radius));
       pointerInfluence.setAttribute("opacity", n(strength));
       influenceNodes.slice(1).forEach((node, i) => {
-        const pulse = !reduced && scene.pulses[i];
+        const relay = i >= FABRIC.maxPulses;
+        const pulse = relay
+          ? scene.relays[i - FABRIC.maxPulses]
+          : scene.pulses[i];
+        const life = relay ? FABRIC.relayLife : FABRIC.pulseLife;
         node.setAttribute(
           "r",
           pulse
-            ? n(
-                pulse.radius * (1 - (1 - pulse.age / FABRIC.pulseLife) ** 3) +
-                  72,
-              )
+            ? n(pulse.radius * (1 - (1 - pulse.age / life) ** 3) + 72)
             : "0",
         );
         if (pulse) {
@@ -279,7 +290,7 @@ export function createSvgFabric(
           node.setAttribute("cy", n(pulse.y));
           node.setAttribute(
             "opacity",
-            n((1 - pulse.age / FABRIC.pulseLife) ** 2),
+            n((1 - pulse.age / life) ** 2 * pulse.energy),
           );
         }
       });
@@ -293,14 +304,7 @@ export function createSvgFabric(
       orbit.setAttribute("opacity", n(strength * 0.18));
     }
     motifs.forEach((motif, i) => {
-      const base = motifPosition(
-        motif,
-        scene.time,
-        scroll,
-        scene.height,
-        reduced,
-      );
-      const point = reduced ? base : scene.displace(base, motif.depth);
+      const point = scene.motifPoint(i, reduced);
       const alpha = scene.opacity(point.x, point.y);
       const node = motifNodes[i];
       const echo = echoes[i];
@@ -311,19 +315,19 @@ export function createSvgFabric(
         return;
       }
       visible++;
-      const rotation = reduced
-        ? 0
-        : Math.sin(scene.time * 0.1 + motif.phase) * 12;
       node.setAttribute(
         "transform",
-        `translate(${n(point.x)} ${n(point.y)}) rotate(${n(rotation)}) scale(${n(motif.size)})`,
+        `translate(${n(point.x)} ${n(point.y)}) rotate(${n(point.rotation)}) scale(${n(motif.size * (1 + point.energy * 0.12))})`,
       );
       node.setAttribute("opacity", n(alpha * (0.16 + motif.depth * 0.14)));
       // Echo the same geometry above cards, revealed only by soft radial influence.
       // It shares no text mask and has no section-sized clipping rectangle.
-      if (!reduced && (strength > 0.001 || scene.pulses.length)) {
+      if (
+        !reduced &&
+        (strength > 0.001 || scene.pulses.length || scene.relays.length)
+      ) {
         echo.setAttribute("transform", node.getAttribute("transform")!);
-        echo.setAttribute("opacity", n(alpha * 0.58));
+        echo.setAttribute("opacity", n(alpha * (0.58 + point.energy * 0.16)));
       } else echo.setAttribute("opacity", "0");
     });
     scene.routes.forEach((route, i) => {
@@ -334,7 +338,10 @@ export function createSvgFabric(
       });
       routeNodes[i].setAttribute("d", points.join(" "));
       routeNodes[i].setAttribute("opacity", n(0.055 + route.depth * 0.055));
-      if (!reduced && (strength > 0.001 || scene.pulses.length)) {
+      if (
+        !reduced &&
+        (strength > 0.001 || scene.pulses.length || scene.relays.length)
+      ) {
         routeEchoes[i].setAttribute("d", points.join(" "));
         routeEchoes[i].setAttribute("opacity", "0.26");
       } else routeEchoes[i].setAttribute("opacity", "0");
@@ -391,6 +398,30 @@ export function createSvgFabric(
         pulse.variant === 2 ? "6 8" : "none",
       );
       core.setAttribute("opacity", n((1 - progress) ** 2));
+    });
+    relayNodes.forEach(({ group, arc, ring }, i) => {
+      const relay = !reduced && scene.relays[i];
+      if (!relay) {
+        group.setAttribute("opacity", "0");
+        return;
+      }
+      const progress = relay.age / FABRIC.relayLife;
+      const dx = relay.x - relay.from.x,
+        dy = relay.y - relay.from.y;
+      arc.setAttribute(
+        "d",
+        `M${n(relay.from.x)} ${n(relay.from.y)}Q${n((relay.x + relay.from.x) / 2 - dy * 0.18)} ${n((relay.y + relay.from.y) / 2 + dx * 0.18)} ${n(relay.x)} ${n(relay.y)}`,
+      );
+      ring.setAttribute("cx", n(relay.x));
+      ring.setAttribute("cy", n(relay.y));
+      ring.setAttribute("r", n(6 + relay.radius * (1 - (1 - progress) ** 3)));
+      ring.setAttribute("opacity", "0.45");
+      group.setAttribute(
+        "opacity",
+        n(
+          Math.min(1, progress * 12) * (1 - progress) ** 2 * relay.energy * 0.5,
+        ),
+      );
     });
     sparks.forEach((node, i) => {
       const spark = !reduced && scene.sparks[i];
