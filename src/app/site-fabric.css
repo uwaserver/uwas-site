@@ -32,9 +32,22 @@ body > footer,
   --fabric-color: #6796ff;
   --fabric-signal: #8bb0ff;
 }
+/* A body sibling escapes every section/card stacking and overflow context.
+   Only the quiet ambient field is masked around prose; local effects cross it. */
+.site-fabric-effects {
+  z-index: 2;
+  mask-image: none;
+  opacity: 0.76;
+  animation: none;
+}
+:root[data-theme="dark"] .site-fabric-effects {
+  opacity: 0.88;
+}
 .fabric-route,
 .fabric-motif,
 .fabric-wake,
+.fabric-echo,
+.fabric-orbit,
 .fabric-connection {
   stroke: currentColor;
 }
@@ -46,7 +59,7 @@ body > footer,
 }
 .fabric-pulse {
   stroke: var(--fabric-signal);
-  stroke-width: 1.2;
+  stroke-width: 1.6;
 }
 /* Shared section washes reveal the same field across section boundaries. */
 body .tech-strip,

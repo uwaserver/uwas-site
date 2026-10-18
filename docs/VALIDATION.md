@@ -1,5 +1,16 @@
 # Website validation
 
+## Continuous interaction overlay, October 18, 2026
+
+- Reproduced the occlusion: the original SVG used z-index 0 below content at 1, opaque cards hid its effects, and click waves shared the prose mask. Scrolling also cleared the entire interaction state. Two regression tests failed before the layer/force changes; their locality control passed.
+- Ambient geometry and foreground interactions now use two body-level SVG siblings with one animation loop. The overlay is at z-index 2, has no prose/viewport CSS mask, uses only soft radial influence for local geometry, and has `pointer-events: none`. Content clipping and card backgrounds remain intact.
+- Production export measured at 375, 768, 1024, 1440, 1920, 2560 and 3840px in both themes: 14 passing combinations, no document overflow, both SVGs cover the usable viewport. Combined node count: 285 mobile, 467 desktop, 531 wide.
+- Browser replays over headings, linked cards and the feature/configuration boundary retained pointer tracking. A live native click on prose produced a foreground wave at exactly `translate(290.00 580.00)`. A scroll from 0 to 300 preserved pointer and pulse origin at `(89.20, 325.27)`. Native text selection succeeded with zero pulses.
+- Desktop and mobile 100-click replays stayed at six waves with unchanged node counts. Mobile touch scrolling and nested control clicks produced zero waves. Native mobile navigation opened and reached `/docs/` with two SVG layers and no overflow. Physical touchscreen hardware was not tested.
+- A temporary fixture mocked media preference and document visibility before loading the production HTML. Reduced motion held at 683 callbacks / 284,180 mutations with zero pending frames and a hidden interaction group. Hidden state held at 1,257 callbacks / 511,269 mutations with zero pending frames; resuming restored one loop.
+- `npm test`: 17 passed, including layer separation, stronger local forces and scroll anchoring. Lint, TypeScript, production build and static export validation passed. Export validation: 30 HTML files / 27 canonical routes, all internal links, anchors and assets resolved. Temporary fixture files were removed before publication.
+- Local evidence: `.qa/fabric-overlay-checks.json`, `fabric-overlay-heading-dark.jpg`, `fabric-overlay-card-dark.jpg`, `fabric-overlay-boundary-light.jpg`, and `fabric-overlay-final-dark.jpg`.
+
 ## Site-wide SVG background, October 18, 2026
 
 - Replaced the hero-only Canvas layer with one SVG background in the shared root layout. Root, content, header and footer interactions retain their normal stacking and keyboard behavior.

@@ -180,50 +180,119 @@ function svgBoundary() {
   return { root: node("svg"), count: () => allocated };
 }
 
+test("interactive effects escape prose masks through a separate SVG root", () => {
+  const scene = new RequestFabric(1440, 1000);
+  const ambient = svgBoundary(),
+    effects = svgBoundary();
+  const renderer = createSvgFabric(ambient.root, scene, "layers", effects.root);
+  scene.move(700, 500);
+  scene.pulse(700, 500);
+  advance(scene, 0.2);
+  renderer.draw(0, false);
+  const descendants = (node) => [node, ...node.children.flatMap(descendants)];
+  const foreground = descendants(effects.root);
+  const background = descendants(ambient.root);
+  assert.ok(
+    background.some((node) => node.attributes.mask),
+    "ambient prose mask remains intact",
+  );
+  assert.ok(
+    foreground.some(
+      (node) =>
+        node.attributes.class === "fabric-pulse" &&
+        Number(node.attributes.opacity) > 0,
+    ),
+    "click ripples must render above content",
+  );
+  assert.ok(
+    !foreground.some((node) => node.attributes.mask === "url(#layers-mask)"),
+    "interactive overlay must not inherit prose masks",
+  );
+  assert.ok(
+    !background.some((node) => node.attributes.class === "fabric-pulse"),
+    "pulses must not disappear beneath opaque cards",
+  );
+});
+
+test("nearby objects visibly repel, attract and react to a short click wave", () => {
+  const scene = new RequestFabric(1440, 1000);
+  scene.move(500, 500);
+  advance(scene, 0.5);
+  assert.ok(
+    scene.displace({ x: 540, y: 500 }, 1).x > 564,
+    "nearby repulsion must be visible",
+  );
+  assert.ok(
+    scene.displace({ x: 650, y: 500 }, 1).x < 650,
+    "outer objects gently attract",
+  );
+  scene.clearInteraction();
+  scene.pulse(500, 500);
+  advance(scene, 0.2);
+  assert.ok(
+    scene.displace({ x: 590, y: 500 }, 1).x > 610,
+    "click wave pushes surrounding objects",
+  );
+  assert.deepEqual(scene.displace({ x: 1300, y: 800 }, 1), { x: 1300, y: 800 });
+});
+
 test("SVG node allocation stays fixed under sustained interaction and expires back to baseline", () => {
   const scene = new RequestFabric(1920, 1080);
   const boundary = svgBoundary();
-  const renderer = createSvgFabric(boundary.root, scene, "test");
+  const effects = svgBoundary();
+  const renderer = createSvgFabric(boundary.root, scene, "test", effects.root);
   renderer.draw(0, false);
-  const allocated = boundary.count();
-  assert.ok(allocated < 600);
+  const allocated = boundary.count() + effects.count();
+  assert.ok(allocated < 650);
   for (let i = 0; i < 200; i++) {
     scene.pulse(700, 500);
     scene.move(700, 500);
     scene.tick(1 / 60);
     renderer.draw(i * 20, false);
   }
-  assert.equal(boundary.count(), allocated);
+  assert.equal(boundary.count() + effects.count(), allocated);
   advance(scene, 4);
   renderer.draw(0, false);
-  const field = boundary.root.children[1];
+  const field = effects.root.children[1];
   const pulses = field.children.filter(
     (n) => n.attributes.class === "fabric-pulse",
   );
+  assert.equal(pulses.length, FABRIC.maxPulses);
   assert.ok(pulses.every((n) => n.attributes.opacity === "0"));
 });
 
 test("reduced-motion SVG output stays static even after clicks and long scrolling", () => {
   const scene = new RequestFabric(1440, 800),
-    boundary = svgBoundary();
-  const renderer = createSvgFabric(boundary.root, scene, "static");
+    boundary = svgBoundary(),
+    effects = svgBoundary();
+  const renderer = createSvgFabric(
+    boundary.root,
+    scene,
+    "static",
+    effects.root,
+  );
   const snapshot = (node) => ({
     tag: node.tag,
     attributes: { ...node.attributes },
     children: node.children.map(snapshot),
   });
   renderer.draw(0, true);
-  const before = snapshot(boundary.root);
+  const before = [snapshot(boundary.root), snapshot(effects.root)];
   scene.move(500, 100);
   scene.pulse(500, 100);
   renderer.draw(5000, true);
-  assert.deepEqual(snapshot(boundary.root), before);
+  assert.deepEqual([snapshot(boundary.root), snapshot(effects.root)], before);
 });
 
 test("offscreen motifs stop updating their transforms until visible again", () => {
   const scene = new RequestFabric(1440, 1000),
     boundary = svgBoundary();
-  const renderer = createSvgFabric(boundary.root, scene, "offscreen");
+  const renderer = createSvgFabric(
+    boundary.root,
+    scene,
+    "offscreen",
+    svgBoundary().root,
+  );
   const motif = createMotifs(1440, 1000)[0];
   const scroll = (motif.y + 40) / (motif.depth * 0.12);
   renderer.draw(scroll, false);
@@ -235,4 +304,26 @@ test("offscreen motifs stop updating their transforms until visible again", () =
   assert.equal(node.attributes.transform, transform);
   renderer.draw(0, false);
   assert.ok(node.attributes.transform);
+});
+
+test("scroll parallax never moves the client-space pointer or active click origin", () => {
+  const scene = new RequestFabric(1440, 1000),
+    ambient = svgBoundary(),
+    effects = svgBoundary();
+  const renderer = createSvgFabric(ambient.root, scene, "scroll", effects.root);
+  scene.move(720, 450);
+  scene.pulse(720, 450);
+  advance(scene, 0.2);
+  renderer.draw(0, false);
+  const pulse = effects.root.children[1].children.find(
+    (node) => node.attributes.class === "fabric-pulse",
+  );
+  const before = pulse.attributes.transform;
+  for (const scroll of [300, 1500, 9000, 200]) {
+    renderer.draw(scroll, false);
+    assert.equal(pulse.attributes.transform, before);
+    assert.equal(scene.pointer.x, 720);
+    assert.equal(scene.pointer.y, 450);
+    assert.ok(Number(pulse.attributes.opacity) > 0);
+  }
 });

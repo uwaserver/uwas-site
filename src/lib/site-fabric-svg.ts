@@ -20,6 +20,7 @@ export function createSvgFabric(
   svg: SVGSVGElement,
   scene: RequestFabric,
   id: string,
+  effects: SVGSVGElement,
 ) {
   function element<K extends keyof SVGElementTagNameMap>(
     tag: K,
@@ -31,7 +32,9 @@ export function createSvgFabric(
     return node;
   }
   svg.replaceChildren();
+  effects.replaceChildren();
   svg.setAttribute("viewBox", `0 0 ${scene.width} ${scene.height}`);
+  effects.setAttribute("viewBox", `0 0 ${scene.width} ${scene.height}`);
   const defs = element("defs");
   const gradient = element("radialGradient", { id: `${id}-quiet` });
   gradient.append(
@@ -72,6 +75,70 @@ export function createSvgFabric(
     "stroke-linejoin": "round",
   });
   svg.append(defs, field);
+  const effectDefs = element("defs");
+  const localGradient = element("radialGradient", { id: `${id}-local` });
+  localGradient.append(
+    element("stop", { offset: "0%", "stop-color": "white" }),
+    element("stop", {
+      offset: "35%",
+      "stop-color": "white",
+      "stop-opacity": 0.75,
+    }),
+    element("stop", {
+      offset: "100%",
+      "stop-color": "white",
+      "stop-opacity": 0,
+    }),
+  );
+  const glowGradient = element("radialGradient", { id: `${id}-glow` });
+  glowGradient.append(
+    element("stop", {
+      offset: "0%",
+      "stop-color": "currentColor",
+      "stop-opacity": 0.14,
+    }),
+    element("stop", {
+      offset: "35%",
+      "stop-color": "currentColor",
+      "stop-opacity": 0.045,
+    }),
+    element("stop", {
+      offset: "100%",
+      "stop-color": "currentColor",
+      "stop-opacity": 0,
+    }),
+  );
+  const localMask = element("mask", {
+    id: `${id}-interaction`,
+    maskUnits: "userSpaceOnUse",
+    x: 0,
+    y: 0,
+    width: scene.width,
+    height: scene.height,
+    "mask-type": "luminance",
+  });
+  const influenceNodes = Array.from({ length: FABRIC.maxPulses + 1 }, () => {
+    const node = element("circle", { r: 0, fill: `url(#${id}-local)` });
+    localMask.append(node);
+    return node;
+  });
+  effectDefs.append(localGradient, glowGradient, localMask);
+  const foreground = element("g", {
+    fill: "none",
+    "stroke-width": 1,
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round",
+  });
+  const glow = element("circle", {
+    class: "fabric-glow",
+    r: 1,
+    fill: `url(#${id}-glow)`,
+    opacity: 0,
+  });
+  const orbit = element("circle", { class: "fabric-orbit", r: 1, opacity: 0 });
+  const local = element("g", { mask: `url(#${id}-interaction)` });
+  foreground.append(glow, local, orbit);
+  effects.append(effectDefs, foreground);
   const motifs = createMotifs(scene.width, scene.height);
   const motifNodes = motifs.map((motif) => {
     const group = element("g", { class: "fabric-motif", opacity: 0 });
@@ -80,6 +147,20 @@ export function createSvgFabric(
       group.append(element("circle", { r: 10, "stroke-dasharray": "2 6" }));
     field.append(group);
     return group;
+  });
+  const echoes = motifs.map((motif) => {
+    const node = element("path", {
+      d: glyphs[motif.kind],
+      class: "fabric-echo",
+      opacity: 0,
+    });
+    local.append(node);
+    return node;
+  });
+  const routeEchoes = scene.routes.map(() => {
+    const node = element("path", { class: "fabric-echo", opacity: 0 });
+    local.append(node);
+    return node;
   });
   const routeNodes = scene.routes.map(() => {
     const node = element("path", { class: "fabric-route", opacity: 0 });
@@ -97,8 +178,9 @@ export function createSvgFabric(
         rx: 0.5,
         class: "fabric-packet",
       });
-      group.append(line, dot);
+      group.append(dot);
       field.append(group);
+      foreground.append(line);
       return { line, dot };
     }),
   );
@@ -113,7 +195,7 @@ export function createSvgFabric(
     circle.setAttribute("vector-effect", "non-scaling-stroke");
     diamond.setAttribute("vector-effect", "non-scaling-stroke");
     group.append(circle, diamond, core);
-    field.append(group);
+    foreground.append(group);
     return { group, circle, diamond, core };
   });
   const sparks = Array.from({ length: FABRIC.maxSparks }, () => {
@@ -123,7 +205,7 @@ export function createSvgFabric(
       width: 2,
       height: 2,
     });
-    field.append(node);
+    foreground.append(node);
     return node;
   });
   const wakes = Array.from({ length: FABRIC.maxWakes }, () => {
@@ -132,7 +214,7 @@ export function createSvgFabric(
       class: "fabric-wake",
       opacity: 0,
     });
-    field.append(node);
+    foreground.append(node);
     return node;
   });
   // Pool the text masks too: scrolling only updates visible geometry.
@@ -170,6 +252,46 @@ export function createSvgFabric(
 
   function draw(scroll: number, reduced: boolean) {
     let visible = 0;
+    const radius = scene.mobile
+      ? FABRIC.pointerRadius.mobile
+      : FABRIC.pointerRadius.desktop;
+    const strength = reduced ? 0 : scene.pointer.strength;
+    foreground.setAttribute("display", reduced ? "none" : "inline");
+    if (!reduced) {
+      const pointerInfluence = influenceNodes[0];
+      pointerInfluence.setAttribute("cx", n(scene.pointer.x));
+      pointerInfluence.setAttribute("cy", n(scene.pointer.y));
+      pointerInfluence.setAttribute("r", n(radius));
+      pointerInfluence.setAttribute("opacity", n(strength));
+      influenceNodes.slice(1).forEach((node, i) => {
+        const pulse = !reduced && scene.pulses[i];
+        node.setAttribute(
+          "r",
+          pulse
+            ? n(
+                pulse.radius * (1 - (1 - pulse.age / FABRIC.pulseLife) ** 3) +
+                  72,
+              )
+            : "0",
+        );
+        if (pulse) {
+          node.setAttribute("cx", n(pulse.x));
+          node.setAttribute("cy", n(pulse.y));
+          node.setAttribute(
+            "opacity",
+            n((1 - pulse.age / FABRIC.pulseLife) ** 2),
+          );
+        }
+      });
+      glow.setAttribute("cx", n(scene.pointer.x));
+      glow.setAttribute("cy", n(scene.pointer.y));
+      glow.setAttribute("r", n(radius * 0.85));
+      glow.setAttribute("opacity", n(strength));
+      orbit.setAttribute("cx", n(scene.pointer.x));
+      orbit.setAttribute("cy", n(scene.pointer.y));
+      orbit.setAttribute("r", n(24 + Math.sin(scene.time * 2) * 4));
+      orbit.setAttribute("opacity", n(strength * 0.18));
+    }
     motifs.forEach((motif, i) => {
       const base = motifPosition(
         motif,
@@ -181,9 +303,11 @@ export function createSvgFabric(
       const point = reduced ? base : scene.displace(base, motif.depth);
       const alpha = scene.opacity(point.x, point.y);
       const node = motifNodes[i];
+      const echo = echoes[i];
       if (alpha <= 0.001) {
         if (node.getAttribute("opacity") !== "0")
           node.setAttribute("opacity", "0");
+        echo.setAttribute("opacity", "0");
         return;
       }
       visible++;
@@ -195,6 +319,12 @@ export function createSvgFabric(
         `translate(${n(point.x)} ${n(point.y)}) rotate(${n(rotation)}) scale(${n(motif.size)})`,
       );
       node.setAttribute("opacity", n(alpha * (0.16 + motif.depth * 0.14)));
+      // Echo the same geometry above cards, revealed only by soft radial influence.
+      // It shares no text mask and has no section-sized clipping rectangle.
+      if (!reduced && (strength > 0.001 || scene.pulses.length)) {
+        echo.setAttribute("transform", node.getAttribute("transform")!);
+        echo.setAttribute("opacity", n(alpha * 0.58));
+      } else echo.setAttribute("opacity", "0");
     });
     scene.routes.forEach((route, i) => {
       const offset = reduced ? 0 : Math.sin(scroll * 0.0008) * route.depth * 14;
@@ -204,6 +334,10 @@ export function createSvgFabric(
       });
       routeNodes[i].setAttribute("d", points.join(" "));
       routeNodes[i].setAttribute("opacity", n(0.055 + route.depth * 0.055));
+      if (!reduced && (strength > 0.001 || scene.pulses.length)) {
+        routeEchoes[i].setAttribute("d", points.join(" "));
+        routeEchoes[i].setAttribute("opacity", "0.26");
+      } else routeEchoes[i].setAttribute("opacity", "0");
       for (let j = 0; j < count; j++) {
         const { dot, line } = packets[i * count + j];
         const p = scene.point(route, (route.phase + j / count) % 1, !reduced);
@@ -216,9 +350,6 @@ export function createSvgFabric(
         }
         dot.setAttribute("transform", `translate(${n(p.x)} ${n(p.y)})`);
         dot.setAttribute("opacity", n(packetAlpha));
-        const radius = scene.mobile
-          ? FABRIC.pointerRadius.mobile
-          : FABRIC.pointerRadius.desktop;
         const distance = Math.hypot(
           p.x - scene.pointer.x,
           p.y - scene.pointer.y,
@@ -230,7 +361,7 @@ export function createSvgFabric(
           );
           line.setAttribute(
             "opacity",
-            n((1 - distance / radius) ** 2 * scene.pointer.strength * 0.4),
+            n((1 - distance / radius) ** 2 * strength * 0.52),
           );
         } else line.setAttribute("opacity", "0");
       }
@@ -246,7 +377,7 @@ export function createSvgFabric(
       group.setAttribute("transform", `translate(${n(pulse.x)} ${n(pulse.y)})`);
       group.setAttribute(
         "opacity",
-        n(Math.min(1, progress * 15) * (1 - progress) ** 2 * 0.85),
+        n(Math.min(1, progress * 15) * (1 - progress) ** 2 * 0.7),
       );
       circle.setAttribute("r", n(radius));
       diamond.setAttribute(
@@ -283,13 +414,19 @@ export function createSvgFabric(
         return;
       }
       const progress = wake.age / FABRIC.wakeLife;
+      const previous = scene.wakes[i - 1];
+      const connected =
+        previous && Math.hypot(previous.x - wake.x, previous.y - wake.y) < 150;
       node.setAttribute(
-        "transform",
-        `translate(${n(wake.x)} ${n(wake.y)}) scale(${n(1 + progress * 2)})`,
+        "d",
+        connected
+          ? `M${n(previous.x - wake.x)} ${n(previous.y - wake.y)}Q0 0 0 0M-2 0H2M0-2V2`
+          : "M-3 0H3M0-3V3",
       );
+      node.setAttribute("transform", `translate(${n(wake.x)} ${n(wake.y)})`);
       node.setAttribute(
         "opacity",
-        n((1 - progress) ** 2 * scene.opacity(wake.x, wake.y) * 0.3),
+        n((1 - progress) ** 2 * scene.opacity(wake.x, wake.y) * 0.62),
       );
     });
     return visible;

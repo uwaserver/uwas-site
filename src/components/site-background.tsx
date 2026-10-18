@@ -8,12 +8,14 @@ import { createSvgFabric } from "@/lib/site-fabric-svg";
 /** One persistent, decorative SVG field shared by every route. */
 export function SiteBackground() {
   const ref = useRef<SVGSVGElement>(null);
+  const effectsRef = useRef<SVGSVGElement>(null);
   const id = useId().replaceAll(":", "");
   const pathname = usePathname();
 
   useEffect(() => {
     const svg = ref.current;
-    if (!svg) return;
+    const effects = effectsRef.current;
+    if (!svg || !effects) return;
     const scene = new RequestFabric(1, 1);
     const media = matchMedia("(prefers-reduced-motion: reduce)");
     let reduced = media.matches,
@@ -33,10 +35,11 @@ export function SiteBackground() {
       scroll: number;
     } | null = null;
     const excluded =
-      'a, button, input, select, textarea, summary, label, nav, header, [role="button"], [role="dialog"], [data-background-no-pulse], h1, h2, h3, p, pre, code, .hero-trust';
+      'a, button, input, select, textarea, summary, label, nav, header, [contenteditable], [role="button"], [role="tab"], [role="dialog"], [data-background-no-pulse]';
 
     function state(value: string) {
       svg!.dataset.sceneState = value;
+      effects!.dataset.sceneState = value;
       document.documentElement.dataset.fabricState = value;
     }
     function paint() {
@@ -89,7 +92,7 @@ export function SiteBackground() {
     function resize() {
       const rect = svg!.getBoundingClientRect();
       scene.resize(rect.width, rect.height);
-      renderer = createSvgFabric(svg!, scene, id);
+      renderer = createSvgFabric(svg!, scene, id, effects!);
       svg!.dataset.quality = scene.mobile ? "compact" : "full";
       sync();
     }
@@ -150,8 +153,8 @@ export function SiteBackground() {
     }
     function scroll() {
       tap = null;
-      scene.leave();
-      scene.clearInteraction();
+      // Both SVGs use viewport/client coordinates. Scrolling changes the prose
+      // masks and parallax, never the pointer anchor or an in-flight ripple.
       dirty = true;
       if (reduced && visible && !document.hidden) paint();
     }
@@ -205,17 +208,27 @@ export function SiteBackground() {
       document.removeEventListener("visibilitychange", sync);
       media.removeEventListener("change", motionChanged);
       svg.replaceChildren();
+      effects.replaceChildren();
       delete document.documentElement.dataset.fabricState;
     };
   }, [id, pathname]);
 
   return (
-    <svg
-      ref={ref}
-      className="site-fabric"
-      aria-hidden="true"
-      focusable="false"
-      data-scene-state="loading"
-    />
+    <>
+      <svg
+        ref={ref}
+        className="site-fabric"
+        aria-hidden="true"
+        focusable="false"
+        data-scene-state="loading"
+      />
+      <svg
+        ref={effectsRef}
+        className="site-fabric site-fabric-effects"
+        aria-hidden="true"
+        focusable="false"
+        data-scene-state="loading"
+      />
+    </>
   );
 }

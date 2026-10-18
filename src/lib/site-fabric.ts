@@ -6,13 +6,15 @@ export const FABRIC = {
   fps: { active: 60, idle: 24, mobile: 30 },
   idleAfter: 3.5,
   speed: 0.028,
-  pointerRadius: { mobile: 95, desktop: 180 },
-  pulseRadius: { mobile: 110, desktop: 210 },
+  pointerRadius: { mobile: 135, desktop: 280 },
+  pointerForce: { mobile: 38, desktop: 68 },
+  pulseRadius: { mobile: 165, desktop: 310 },
+  pulseForce: 52,
   pulseLife: 2.1,
   maxPulses: 6,
   maxSparks: 72,
   maxWakes: 18,
-  wakeLife: 0.85,
+  wakeLife: 1.1,
   edgeFade: 48,
   maxStep: 0.05,
   tapDistance: 9,
@@ -195,7 +197,7 @@ export class RequestFabric {
     const count = this.mobile ? 6 : 12;
     for (let i = 0; i < count; i++) {
       const angle = (i / count) * TAU + variant * 0.24;
-      const speed = 28 + (i % 4) * 13;
+      const speed = 75 + (i % 4) * 24;
       this.sparks.push({
         x,
         y,
@@ -250,10 +252,17 @@ export class RequestFabric {
       dy = y - this.pointer.y,
       distance = Math.hypot(dx, dy);
     if (distance < radius && distance > 0) {
-      const influence =
-        (1 - distance / radius) ** 2 * this.pointer.strength * depth * 18;
-      x += (dx / distance) * influence;
-      y += (dy / distance) * influence;
+      const t = distance / radius;
+      const falloff = (1 - t) ** 2 * this.pointer.strength * depth;
+      const force = this.mobile
+        ? FABRIC.pointerForce.mobile
+        : FABRIC.pointerForce.desktop;
+      // Inner repulsion, a gentle outer attraction and a tangential current.
+      // Every term approaches zero at the radius, without a hard boundary.
+      const radial = (1 - t * 2.6) * falloff * force;
+      const swirl = Math.sin(t * Math.PI) * falloff * force * 0.38;
+      x += (dx * radial - dy * swirl) / distance;
+      y += (dy * radial + dx * swirl) / distance;
     }
     for (const pulse of this.pulses) {
       const px = x - pulse.x,
@@ -262,8 +271,11 @@ export class RequestFabric {
       const progress = pulse.age / FABRIC.pulseLife;
       const ring = pulse.radius * (1 - (1 - progress) ** 3);
       const force =
-        clamp(1 - Math.abs(d - ring) / 36) * (1 - progress) * 13 * depth;
-      if (d > 0 && d < pulse.radius + 36) {
+        ease(clamp(1 - Math.abs(d - ring) / 72)) *
+        (1 - progress) ** 2 *
+        FABRIC.pulseForce *
+        depth;
+      if (d > 0 && d < pulse.radius + 72) {
         x += (px / d) * force;
         y += (py / d) * force;
       }
