@@ -1,5 +1,11 @@
 # Website validation
 
+## Interactive hero, October 18, 2026
+
+Full-width request-path canvas added with bounded interactions, theme-aware palettes, compact mobile budgets and static reduced-motion rendering. See [Hero request fabric](HERO-FABRIC.md) for lifecycle, input and viewport evidence, including the scope of simulated browser checks.
+
+`npm test` (11 passed), `npm run lint`, `npm run typecheck`, `npm run build` and `npm run check:export` passed. The final export contains 30 HTML pages / 27 canonical public routes and excludes temporary browser fixtures.
+
 ## Responsive layout, October 18, 2026
 
 - Production static export checked on all 27 canonical routes at 375, 768, 1024, 1440, 1920 and 2560px: 162 route/viewport combinations, no document-level horizontal overflow, and consistent shared container alignment.

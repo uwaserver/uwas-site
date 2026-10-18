@@ -3,6 +3,7 @@
 @import "@fontsource/jetbrains-mono/500.css";
 @import "./oxog-studio.css";
 @import "./theme-picker.css";
+@import "./hero-fabric.css";
 
 :root {
   --layout-max: 1728px;

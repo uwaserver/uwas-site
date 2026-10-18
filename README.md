@@ -16,6 +16,7 @@ For the actual static production output:
 ```sh
 npm run lint
 npm run typecheck
+npm test
 npm run build
 npm run check:export
 npm run preview
@@ -25,7 +26,7 @@ The static preview runs at `http://127.0.0.1:4317`. This deliberately avoids por
 
 ## What is included
 
-- Home with animated SVG request-flow diagram, interactive stack comparison, configuration examples and illustrative dashboard explorer.
+- Home with a full-width interactive request-fabric background, animated SVG request-flow diagram, interactive stack comparison, configuration examples and illustrative dashboard explorer.
 - Features with category filtering, use cases, architecture, downloads, changelog, licensing, enterprise contact, brand assets and privacy pages.
 - Documentation overview and 16 guides, with navigation, code copying, section anchors and adjacent-guide links.
 - Local documentation search (Ctrl/Cmd+K), including an empty state, keyboard focus and native modal behavior.
@@ -71,3 +72,5 @@ For a future rollback, restore the custom-domain assignment to the previous repo
 `check:export` walks every exported HTML file, verifies that local links and static assets exist, checks H1/title presence and confirms CNAME, `.nojekyll` and crawler metadata. It supplements TypeScript, ESLint and a real Next production build. Browser interaction and visual checks are recorded in `docs/VALIDATION.md`.
 
 Local `.reference/` upstream sources and `.qa/` screenshots are ignored and never published.
+
+The hero's animation budgets and browser checks are documented in `docs/HERO-FABRIC.md`. `npm test` runs its deterministic simulation/rendering checks with Node's built-in test runner.

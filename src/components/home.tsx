@@ -25,6 +25,7 @@ import {
   Zap,
 } from "lucide-react";
 import { LogoMark } from "./brand";
+import { HeroBackground } from "./hero-background";
 import { ButtonLink, CodeBlock, CopyButton, FAQ, Reveal } from "./ui";
 import {
   configurations,
@@ -188,66 +189,71 @@ export function ServerDiagram() {
 
 export function Hero() {
   return (
-    <section className="hero container">
-      <div className="hero-copy">
-        <Reveal>
-          <Link href="/changelog/" className="release-badge">
-            <span className="status-dot" />
-            <span>{VERSION} is here</span>
-            <span className="badge-divider" />
-            Meet your new stack
-            <ChevronRight size={14} />
-          </Link>
-          <h1>
-            One binary. <br />
-            Your entire <br />
-            <span>web stack.</span>
-          </h1>
-          <p className="hero-description">
-            The web server, reverse proxy, cache and hosting panel. Together at
-            last. Built in Go. Built for you.
-          </p>
-          <div className="button-row">
-            <ButtonLink href="/docs/getting-started/">
-              Start building
-            </ButtonLink>
-            <ButtonLink href={REPO} secondary external>
-              View on GitHub
-            </ButtonLink>
-          </div>
-          <div className="hero-command">
-            <span className="command-dollar">$</span>
-            <code>{INSTALL}</code>
-            <CopyButton text={INSTALL} />
-          </div>
-          <div className="hero-trust">
-            <span>
-              <Check size={14} />
-              Open source
-            </span>
-            <span>
-              <Check size={14} />
-              Self-hosted
-            </span>
-            <span>
-              <Check size={14} />
-              Your infrastructure
-            </span>
+    <section className="hero-stage">
+      <HeroBackground />
+      <div className="hero container">
+        <div className="hero-copy" data-hero-quiet>
+          <Reveal>
+            <Link href="/changelog/" className="release-badge">
+              <span className="status-dot" />
+              <span>{VERSION} is here</span>
+              <span className="badge-divider" />
+              Meet your new stack
+              <ChevronRight size={14} />
+            </Link>
+            <h1>
+              One binary. <br />
+              Your entire <br />
+              <span>web stack.</span>
+            </h1>
+            <p className="hero-description">
+              The web server, reverse proxy, cache and hosting panel. Together
+              at last. Built in Go. Built for you.
+            </p>
+            <div className="button-row">
+              <ButtonLink href="/docs/getting-started/">
+                Start building
+              </ButtonLink>
+              <ButtonLink href={REPO} secondary external>
+                View on GitHub
+              </ButtonLink>
+            </div>
+            <div className="hero-command">
+              <span className="command-dollar">$</span>
+              <code>{INSTALL}</code>
+              <CopyButton text={INSTALL} />
+            </div>
+            <div className="hero-trust">
+              <span>
+                <Check size={14} />
+                Open source
+              </span>
+              <span>
+                <Check size={14} />
+                Self-hosted
+              </span>
+              <span>
+                <Check size={14} />
+                Your infrastructure
+              </span>
+            </div>
+          </Reveal>
+        </div>
+        <Reveal className="hero-visual" delay={0.1}>
+          <div data-hero-no-pulse>
+            <ServerDiagram />
+            <div className="diagram-note">
+              <span className="note-line" />
+              <span>
+                Less infrastructure to think about.
+                <br />
+                <strong>More room to build something great.</strong>
+              </span>
+              <ArrowDown size={17} />
+            </div>
           </div>
         </Reveal>
       </div>
-      <Reveal className="hero-visual" delay={0.1}>
-        <ServerDiagram />
-        <div className="diagram-note">
-          <span className="note-line" />
-          <span>
-            Less infrastructure to think about.
-            <br />
-            <strong>More room to build something great.</strong>
-          </span>
-          <ArrowDown size={17} />
-        </div>
-      </Reveal>
     </section>
   );
 }
