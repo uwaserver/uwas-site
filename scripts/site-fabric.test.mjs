@@ -1,12 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createSvgFabric } from "../src/lib/site-fabric-svg.ts";
 import {
   FABRIC,
   RequestFabric,
-  drawFabric,
-  fabricPixelRatio,
+  createMotifs,
+  motifPosition,
   isFabricTap,
-} from "../src/lib/hero-fabric.ts";
+} from "../src/lib/site-fabric.ts";
 
 const advance = (scene, seconds, hz = 60) => {
   for (let i = 0; i < seconds * hz; i++) scene.tick(1 / hz);
@@ -94,18 +95,6 @@ test("touch scrolling, long presses and drags are not treated as taps", () => {
   assert.equal(isFabricTap(start, { x: 20, y: 30, time: 90 }), false);
 });
 
-test("high-DPI and 4K canvases remain within the backing-pixel budget", () => {
-  for (const [w, h, dpr] of [
-    [375, 1300, 3],
-    [1920, 980, 2],
-    [3840, 2160, 3],
-  ]) {
-    const ratio = fabricPixelRatio(w, h, dpr);
-    assert.ok(ratio <= FABRIC.maxDpr);
-    assert.ok(w * h * ratio ** 2 <= FABRIC.maxPixels + 0.001);
-  }
-});
-
 test("routes span the whole field while edges and prose are quiet", () => {
   const scene = new RequestFabric(2560, 980);
   assert.ok(
@@ -132,25 +121,118 @@ test("out-of-bounds clicks produce no effects", () => {
   assert.equal(scene.pulses.length + scene.sparks.length, 0);
 });
 
-test("the reduced-motion drawing stays static even after an interaction", () => {
-  const scene = new RequestFabric(1440, 800);
-  const render = () => {
-    const commands = [];
-    const context = new Proxy(
-      {},
-      {
-        get: (_, key) => (...args) => commands.push([key, ...args]),
-        set: (_, key, value) => {
-          commands.push([key, value]);
-          return true;
-        },
-      },
+test("motifs are evenly stratified, deterministic and bounded at every screen size", () => {
+  for (const [width, height] of [
+    [375, 844],
+    [1440, 1000],
+    [3840, 2160],
+  ]) {
+    const motifs = createMotifs(width, height);
+    assert.deepEqual(motifs, createMotifs(width, height));
+    assert.ok(motifs.length <= FABRIC.motifs.wide);
+    assert.ok(
+      motifs.every((m) => m.x >= 0 && m.x < width && m.y >= 0 && m.y < height),
     );
-    drawFabric(context, scene, "dark", true);
-    return commands;
+    assert.ok(motifs.some((m) => m.x < width / 3));
+    assert.ok(motifs.some((m) => m.x > (width * 2) / 3));
+  }
+  assert.equal(createMotifs(375, 844).length, FABRIC.motifs.mobile);
+});
+
+test("parallax stays bounded after long scrolling and reduced motion ignores scroll/time", () => {
+  for (const motif of createMotifs(1920, 1080)) {
+    const a = motifPosition(motif, 0, 0, 1080, true);
+    assert.deepEqual(motifPosition(motif, 600, 250000, 1080, true), a);
+    const moving = motifPosition(motif, 600, 250000, 1080);
+    assert.ok(moving.y >= -80 && moving.y < 1160);
+    assert.ok(Math.abs(moving.x - motif.x) <= 9);
+  }
+});
+
+// Minimal SVG boundary: the real scene and renderer run without a browser dependency.
+function svgBoundary() {
+  let allocated = 0;
+  const doc = {
+    createElementNS: (_, tag) => node(tag),
+    querySelectorAll: () => [],
   };
-  const before = render();
+  function node(tag) {
+    allocated++;
+    return {
+      tag,
+      ownerDocument: doc,
+      attributes: {},
+      children: [],
+      setAttribute(key, value) {
+        this.attributes[key] = String(value);
+      },
+      getAttribute(key) {
+        return this.attributes[key] ?? null;
+      },
+      append(...children) {
+        this.children.push(...children);
+      },
+      replaceChildren(...children) {
+        this.children = children;
+      },
+    };
+  }
+  return { root: node("svg"), count: () => allocated };
+}
+
+test("SVG node allocation stays fixed under sustained interaction and expires back to baseline", () => {
+  const scene = new RequestFabric(1920, 1080);
+  const boundary = svgBoundary();
+  const renderer = createSvgFabric(boundary.root, scene, "test");
+  renderer.draw(0, false);
+  const allocated = boundary.count();
+  assert.ok(allocated < 600);
+  for (let i = 0; i < 200; i++) {
+    scene.pulse(700, 500);
+    scene.move(700, 500);
+    scene.tick(1 / 60);
+    renderer.draw(i * 20, false);
+  }
+  assert.equal(boundary.count(), allocated);
+  advance(scene, 4);
+  renderer.draw(0, false);
+  const field = boundary.root.children[1];
+  const pulses = field.children.filter(
+    (n) => n.attributes.class === "fabric-pulse",
+  );
+  assert.ok(pulses.every((n) => n.attributes.opacity === "0"));
+});
+
+test("reduced-motion SVG output stays static even after clicks and long scrolling", () => {
+  const scene = new RequestFabric(1440, 800),
+    boundary = svgBoundary();
+  const renderer = createSvgFabric(boundary.root, scene, "static");
+  const snapshot = (node) => ({
+    tag: node.tag,
+    attributes: { ...node.attributes },
+    children: node.children.map(snapshot),
+  });
+  renderer.draw(0, true);
+  const before = snapshot(boundary.root);
   scene.move(500, 100);
   scene.pulse(500, 100);
-  assert.deepEqual(render(), before);
+  renderer.draw(5000, true);
+  assert.deepEqual(snapshot(boundary.root), before);
+});
+
+test("offscreen motifs stop updating their transforms until visible again", () => {
+  const scene = new RequestFabric(1440, 1000),
+    boundary = svgBoundary();
+  const renderer = createSvgFabric(boundary.root, scene, "offscreen");
+  const motif = createMotifs(1440, 1000)[0];
+  const scroll = (motif.y + 40) / (motif.depth * 0.12);
+  renderer.draw(scroll, false);
+  const node = boundary.root.children[1].children[0];
+  assert.equal(node.attributes.opacity, "0");
+  const transform = node.attributes.transform;
+  advance(scene, 1);
+  renderer.draw(scroll, false);
+  assert.equal(node.attributes.transform, transform);
+  renderer.draw(0, false);
+  assert.ok(node.attributes.transform);
 });

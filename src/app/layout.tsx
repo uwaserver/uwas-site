@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Footer, Header } from "@/components/ui";
 import { REPO } from "@/lib/content";
+import { SiteBackground } from "@/components/site-background";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -52,6 +53,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
+        <SiteBackground />
         <a className="skip-link" href="#main-content">
           Skip to content
         </a>

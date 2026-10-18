@@ -25,7 +25,6 @@ import {
   Zap,
 } from "lucide-react";
 import { LogoMark } from "./brand";
-import { HeroBackground } from "./hero-background";
 import { ButtonLink, CodeBlock, CopyButton, FAQ, Reveal } from "./ui";
 import {
   configurations,
@@ -190,9 +189,8 @@ export function ServerDiagram() {
 export function Hero() {
   return (
     <section className="hero-stage">
-      <HeroBackground />
       <div className="hero container">
-        <div className="hero-copy" data-hero-quiet>
+        <div className="hero-copy" data-background-quiet>
           <Reveal>
             <Link href="/changelog/" className="release-badge">
               <span className="status-dot" />
@@ -240,7 +238,7 @@ export function Hero() {
           </Reveal>
         </div>
         <Reveal className="hero-visual" delay={0.1}>
-          <div data-hero-no-pulse>
+          <div data-background-no-pulse>
             <ServerDiagram />
             <div className="diagram-note">
               <span className="note-line" />

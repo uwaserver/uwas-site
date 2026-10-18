@@ -1,5 +1,16 @@
 # Website validation
 
+## Site-wide SVG background, October 18, 2026
+
+- Replaced the hero-only Canvas layer with one SVG background in the shared root layout. Root, content, header and footer interactions retain their normal stacking and keyboard behavior.
+- All 27 canonical routes checked at 375, 768, 1024, 1440, 1920, 2560 and 3840px in dark mode: 189 passing route/viewport combinations. Exactly one background SVG, zero Canvas elements, no document overflow, and correct viewport coverage. Largest observed SVG tree: 438 nodes; mobile: 245 nodes / 12 motifs.
+- Home, features and configuration guide checked at the same seven widths in light mode: 21 passing combinations. Visual inspection included the hero, feature/configuration section boundary, docs and footer.
+- A temporary browser fixture mocked media preference and document visibility before loading the production page. Reduced motion held at 215 animation callbacks / 53,791 SVG mutations with zero pending requests. Hidden mode held at 240 callbacks / 62,117 mutations with zero pending requests. Resuming restored one loop.
+- 100 synchronous touch replays stayed at 6 active echoes and 394 SVG nodes. Touch scrolling produced zero echoes; copying succeeded without an echo. A 375px touch replay produced one echo with the compact 245-node pool. Physical touchscreen hardware was not tested.
+- Features → Use cases → Documentation navigation returned to one pending animation request, one SVG and the same bounded node pool. No console errors observed during the checks.
+- `npm test`: 14 passing tests. Lint, TypeScript, production build and static export validation passed on the final implementation.
+- Local evidence: `.qa/site-svg-dark-checks.json`, `site-svg-light-checks.json`, `site-svg-interactions.json`, and `site-svg-*.jpg`. Temporary probe pages are removed from the production export before deployment. See [Site-wide SVG background](SITE-BACKGROUND.md) for maintenance.
+
 ## Interactive hero, October 18, 2026
 
 Full-width request-path canvas added with bounded interactions, theme-aware palettes, compact mobile budgets and static reduced-motion rendering. See [Hero request fabric](HERO-FABRIC.md) for lifecycle, input and viewport evidence, including the scope of simulated browser checks.

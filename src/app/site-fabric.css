@@ -1,0 +1,78 @@
+body {
+  isolation: isolate;
+}
+body > header,
+body > main,
+body > footer,
+.announcement {
+  position: relative;
+  z-index: 1;
+}
+.site-fabric {
+  --fabric-color: #2563eb;
+  --fabric-signal: #2563eb;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+  overflow: hidden;
+  color: var(--fabric-color);
+  mask-image: linear-gradient(
+    transparent,
+    #000 45px,
+    #000 calc(100% - 32px),
+    transparent
+  );
+  animation: fabric-arrive 1.2s ease-out both;
+}
+:root[data-theme="dark"] .site-fabric {
+  --fabric-color: #6796ff;
+  --fabric-signal: #8bb0ff;
+}
+.fabric-route,
+.fabric-motif,
+.fabric-wake,
+.fabric-connection {
+  stroke: currentColor;
+}
+.fabric-connection {
+  stroke-dasharray: 2 5;
+}
+.fabric-packet {
+  fill: var(--fabric-signal);
+}
+.fabric-pulse {
+  stroke: var(--fabric-signal);
+  stroke-width: 1.2;
+}
+/* Shared section washes reveal the same field across section boundaries. */
+body .tech-strip,
+body .config-section,
+body .ai-section {
+  background: color-mix(in srgb, var(--surface) 74%, transparent);
+}
+.server-diagram[data-fabric-visible="false"] .flow-lines,
+:root[data-fabric-state="paused"] .flow-lines {
+  animation-play-state: paused;
+}
+@keyframes fabric-arrive {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-fabric {
+    animation: none;
+  }
+}
+@media print {
+  .site-fabric {
+    display: none;
+  }
+}

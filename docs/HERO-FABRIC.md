@@ -1,5 +1,7 @@
 # Hero request fabric
 
+Historical record for revision `4fe9b75`. The hero-only Canvas layer and the source paths below have been replaced by the [site-wide SVG background](SITE-BACKGROUND.md).
+
 The full-width hero background follows UWAS's converging request paths, blue/ink palette, open junctions and small data packets. It is a decorative Canvas 2D client component; the existing copy, CTA controls and SVG server diagram retain their normal layout and interaction.
 
 ## Maintenance

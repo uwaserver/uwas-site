@@ -1,7 +1,5 @@
-/** Shared budgets and palette for the UWAS request fabric. No browser state. */
+/** Shared motion and object budgets for the UWAS request fabric. */
 export const FABRIC = {
-  maxDpr: 1.5,
-  maxPixels: 4_000_000,
   mobileBreakpoint: 650,
   routes: { mobile: 7, desktop: 14 },
   packets: { mobile: 2, desktop: 3 },
@@ -19,23 +17,64 @@ export const FABRIC = {
   maxStep: 0.05,
   tapDistance: 9,
   tapDuration: 650,
-  palettes: {
-    light: {
-      line: "59, 111, 218",
-      bright: "37, 99, 235",
-      accent: "22, 128, 110",
-      opacity: 0.9,
-    },
-    dark: {
-      line: "93, 142, 246",
-      bright: "119, 166, 255",
-      accent: "85, 213, 180",
-      opacity: 1,
-    },
-  },
+  motifs: { mobile: 12, desktop: 38, wide: 58 },
 } as const;
 
 export type Point = { x: number; y: number };
+export type Motif = Point & {
+  depth: number;
+  phase: number;
+  size: number;
+  kind: number;
+};
+
+/** Stable, stratified placement prevents random clumps and hydration randomness. */
+export function createMotifs(width: number, height: number): Motif[] {
+  const count =
+    width <= FABRIC.mobileBreakpoint
+      ? FABRIC.motifs.mobile
+      : width >= 1900
+        ? FABRIC.motifs.wide
+        : FABRIC.motifs.desktop;
+  const columns = Math.ceil(Math.sqrt((count * width) / Math.max(height, 1)));
+  const rows = Math.ceil(count / columns);
+  return Array.from({ length: count }, (_, i) => ({
+    x: (((i % columns) + 0.25 + ((i * 0.618) % 1) * 0.5) / columns) * width,
+    y:
+      ((Math.floor(i / columns) + 0.25 + ((i * 0.414) % 1) * 0.5) / rows) *
+      height,
+    depth: 0.4 + (i % 3) * 0.3,
+    phase: i * 2.399,
+    size: 0.6 + (i % 4) * 0.17,
+    kind: i % 5,
+  }));
+}
+
+export function motifPosition(
+  motif: Motif,
+  time: number,
+  scroll: number,
+  height: number,
+  reduced = false,
+) {
+  const span = height + 160;
+  const drift = reduced
+    ? 0
+    : Math.sin(time * (0.14 + motif.depth * 0.1) + motif.phase) *
+      12 *
+      motif.depth;
+  return {
+    x:
+      motif.x +
+      (reduced ? 0 : Math.cos(time * 0.14 + motif.phase) * 9 * motif.depth),
+    y:
+      ((((motif.y - (reduced ? 0 : scroll * motif.depth * 0.12) + drift + 80) %
+        span) +
+        span) %
+        span) -
+      80,
+  };
+}
 export type QuietZone = Point & { width: number; height: number };
 export type Route = {
   points: Point[];
@@ -64,14 +103,6 @@ export function isFabricTap(
     end.time - start.time <= FABRIC.tapDuration &&
     end.time >= start.time &&
     Math.hypot(end.x - start.x, end.y - start.y) < FABRIC.tapDistance
-  );
-}
-
-export function fabricPixelRatio(width: number, height: number, dpr: number) {
-  return Math.min(
-    Math.max(1, dpr),
-    FABRIC.maxDpr,
-    Math.sqrt(FABRIC.maxPixels / Math.max(1, width * height)),
   );
 }
 
@@ -273,203 +304,4 @@ export class RequestFabric {
     }
     return edge * quiet;
   }
-}
-
-export function drawFabric(
-  context: CanvasRenderingContext2D,
-  scene: RequestFabric,
-  theme: "light" | "dark",
-  reduced = false,
-) {
-  const { width, height, time } = scene;
-  const palette = FABRIC.palettes[theme];
-  const color = (rgb: string, opacity: number) =>
-    `rgba(${rgb},${clamp(opacity * palette.opacity)})`;
-  context.clearRect(0, 0, width, height);
-  context.lineWidth = 1;
-  // Quiet registration marks evoke a network blueprint rather than a star field.
-  const spacing = scene.mobile ? 72 : 84;
-  for (let x = 24; x < width; x += spacing) {
-    for (let y = 30; y < height; y += spacing) {
-      const alpha = scene.opacity(x, y);
-      context.strokeStyle = color(palette.line, alpha * 0.14);
-      context.beginPath();
-      context.moveTo(x - 2, y);
-      context.lineTo(x + 2, y);
-      context.moveTo(x, y - 2);
-      context.lineTo(x, y + 2);
-      context.stroke();
-    }
-  }
-  const packetCount = scene.mobile
-    ? FABRIC.packets.mobile
-    : FABRIC.packets.desktop;
-  for (const [index, route] of scene.routes.entries()) {
-    // Short segments let content masks and edge fades vary smoothly along a path.
-    let previous = scene.point(route, 0, !reduced);
-    for (let j = 1; j <= 40; j++) {
-      const point = scene.point(route, j / 40, !reduced);
-      const alpha = scene.opacity(
-        (point.x + previous.x) / 2,
-        (point.y + previous.y) / 2,
-      );
-      context.strokeStyle = color(
-        palette.line,
-        alpha * (0.12 + route.depth * 0.12),
-      );
-      context.beginPath();
-      context.moveTo(previous.x, previous.y);
-      context.lineTo(point.x, point.y);
-      context.stroke();
-      previous = point;
-    }
-    for (let j = 0; j < packetCount; j++) {
-      const progress = (route.phase + j / packetCount) % 1;
-      const point = scene.point(route, progress, !reduced);
-      const alpha =
-        scene.opacity(point.x, point.y) * (0.35 + route.depth * 0.3);
-      const accent = (index + j) % 7 === 0 ? palette.accent : palette.bright;
-      const tail = scene.point(route, clamp(progress - 0.014), !reduced);
-      context.strokeStyle = color(accent, alpha * 0.45);
-      context.lineWidth = 1.4;
-      context.beginPath();
-      context.moveTo(tail.x, tail.y);
-      context.lineTo(point.x, point.y);
-      context.stroke();
-      context.fillStyle = color(accent, alpha);
-      const size = 1.5 + route.depth;
-      context.fillRect(
-        point.x - size / 2,
-        point.y - size / 2,
-        size + 1.5,
-        size,
-      );
-      context.lineWidth = 1;
-      if (!reduced && scene.pointer.strength > 0.05) {
-        const distance = Math.hypot(
-          point.x - scene.pointer.x,
-          point.y - scene.pointer.y,
-        );
-        const radius = scene.mobile
-          ? FABRIC.pointerRadius.mobile
-          : FABRIC.pointerRadius.desktop;
-        if (distance < radius) {
-          context.strokeStyle = color(
-            palette.bright,
-            alpha *
-              (1 - distance / radius) ** 2 *
-              scene.pointer.strength *
-              0.65,
-          );
-          context.setLineDash([2, 5]);
-          context.beginPath();
-          context.moveTo(point.x, point.y);
-          context.lineTo(scene.pointer.x, scene.pointer.y);
-          context.stroke();
-          context.setLineDash([]);
-        }
-      }
-    }
-    // Small open junctions, with separate depth and a restrained parallax drift.
-    const port = scene.point(route, 0.13 + (index % 5) * 0.17, !reduced);
-    const alpha = scene.opacity(port.x, port.y);
-    context.strokeStyle = color(palette.line, alpha * 0.36);
-    context.strokeRect(port.x - 3, port.y - 3, 6, 6);
-    if (index % 3 === 0 && !scene.mobile) {
-      context.fillStyle = color(palette.line, alpha * 0.33);
-      context.font = '9px "JetBrains Mono", monospace';
-      context.fillText(
-        ["TLS", "HTTP", "CACHE", "PHP", "PROXY"][index % 5],
-        port.x + 11,
-        port.y + 3,
-      );
-    }
-  }
-  if (reduced) return;
-  for (const wake of scene.wakes) {
-    const progress = wake.age / FABRIC.wakeLife;
-    context.strokeStyle = color(
-      palette.bright,
-      scene.opacity(wake.x, wake.y) * (1 - progress) ** 2 * 0.3,
-    );
-    const size = 3 + progress * 12;
-    context.beginPath();
-    context.moveTo(wake.x - size, wake.y);
-    context.lineTo(wake.x + size, wake.y);
-    context.moveTo(wake.x, wake.y - size);
-    context.lineTo(wake.x, wake.y + size);
-    context.stroke();
-  }
-  for (const pulse of scene.pulses) {
-    const progress = pulse.age / FABRIC.pulseLife;
-    const radius = 5 + pulse.radius * (1 - (1 - progress) ** 3);
-    const alpha = Math.min(1, progress * 12) * (1 - progress) ** 2;
-    context.save();
-    // A spatial mask clips the signal smoothly at scene edges and behind copy.
-    const mask = context.createRadialGradient(
-      pulse.x,
-      pulse.y,
-      0,
-      pulse.x,
-      pulse.y,
-      radius + 40,
-    );
-    mask.addColorStop(0, color(palette.bright, alpha * 0.075));
-    mask.addColorStop(1, color(palette.bright, 0));
-    context.fillStyle = mask;
-    context.fillRect(
-      pulse.x - radius - 40,
-      pulse.y - radius - 40,
-      (radius + 40) * 2,
-      (radius + 40) * 2,
-    );
-    context.lineWidth = 1.25;
-    // Segmented circular or diamond-shaped request echoes share the same palette.
-    for (let j = 0; j < 64; j++) {
-      const angle = (j / 64) * TAU;
-      const next = ((j + 0.85) / 64) * TAU;
-      const shape = (a: number) =>
-        pulse.variant === 1
-          ? radius / (Math.abs(Math.cos(a)) + Math.abs(Math.sin(a)))
-          : radius;
-      const a = {
-        x: pulse.x + Math.cos(angle) * shape(angle),
-        y: pulse.y + Math.sin(angle) * shape(angle),
-      };
-      const b = {
-        x: pulse.x + Math.cos(next) * shape(next),
-        y: pulse.y + Math.sin(next) * shape(next),
-      };
-      context.strokeStyle = color(
-        palette.bright,
-        alpha *
-          scene.opacity(a.x, a.y) *
-          (pulse.variant === 2 && j % 3 === 0 ? 0.2 : 0.75),
-      );
-      context.beginPath();
-      context.moveTo(a.x, a.y);
-      context.lineTo(b.x, b.y);
-      context.stroke();
-    }
-    context.restore();
-  }
-  for (const spark of scene.sparks) {
-    const alpha =
-      (1 - spark.age / spark.life) ** 2 * scene.opacity(spark.x, spark.y);
-    context.fillStyle = color(palette.bright, alpha * 0.9);
-    context.fillRect(
-      spark.x - spark.size / 2,
-      spark.y - spark.size / 2,
-      spark.size,
-      spark.size,
-    );
-  }
-  // One slowly breathing acknowledgement on the trunk, not a global cursor glow.
-  const x = width * 0.51,
-    y = height * 0.86;
-  context.strokeStyle = color(
-    palette.accent,
-    scene.opacity(x, y) * (0.12 + Math.sin(time * 0.8) * 0.035),
-  );
-  context.strokeRect(x - 6, y - 6, 12, 12);
 }
