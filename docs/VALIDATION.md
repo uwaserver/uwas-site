@@ -1,5 +1,12 @@
 # Website validation
 
+## OXOG footer reference, October 19, 2026
+
+- Replaced the expanded studio section with the single linked card from [Mammoth Engine](https://mammothengine.com/): identical copy, four SVG paths, pink/purple colors, Manrope/Space Grotesk fonts, padding, logo sizes and responsive breakpoints. Removed the project list and extra studio/company rows.
+- Matched the repeating six-second `ease-in-out` draw, 400-unit dash and 0 / 0.15 / 0.3 / 0.45-second delays. Animation runs only while the card is visible, pauses when the document is hidden, and is scoped to `prefers-reduced-motion: no-preference`. Mouse-effects preferences remain independent.
+- Browser measurements in light and dark at 375, 768, 1024, 1440, 1920 and 2560px: no horizontal overflow; card children stay within its bounds. At desktop sizes the reference and local card share the 160.671875px height, 105px logo and 35px heading. Existing UWAS container alignment is retained.
+- `npm test`: 26 passed. Lint, TypeScript, production build and export validation passed (30 HTML pages / 27 canonical routes). Local comparison evidence and screenshots are under ignored `.qa/oxog-mammoth-*`.
+
 ## Header mouse-effects scope, October 18, 2026
 
 - The header button now controls only pointer/click effects. English tooltip and accessible labels are `Disable mouse effects` / `Enable mouse effects`. The existing localStorage key remains compatible with saved choices.
