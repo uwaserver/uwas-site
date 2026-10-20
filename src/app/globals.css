@@ -1,4 +1,5 @@
 @import "@fontsource-variable/inter";
+@import "./fonts.css";
 @import "@fontsource/jetbrains-mono/400.css";
 @import "@fontsource/jetbrains-mono/500.css";
 @import "./oxog-studio.css";
@@ -6,6 +7,9 @@
 @import "./site-fabric.css";
 
 :root {
+  --font-space-grotesk: "Space Grotesk", "Space Grotesk Fallback";
+  --font-jetbrains: "JetBrains Mono", "JetBrains Mono Fallback";
+  --font-quicksand: "Quicksand", "Quicksand Fallback";
   --layout-max: 1728px;
   --page-gutter: clamp(32px, 3vw, 64px);
   --section-space: clamp(64px, 6vw, 112px);
@@ -24,6 +28,9 @@
   --blue: #2563eb;
   --blue-hover: #174fd2;
   --blue-soft: #eff5ff;
+  --action-fill: #2563eb;
+  --action-hover: #174fd2;
+  --on-action: #fff;
   --green: #16805c;
   --code: #101c32;
   --shadow: 0 16px 50px #19356009;
@@ -57,7 +64,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: "Inter Variable", Inter, Arial, sans-serif;
+  font-family: var(--font-space-grotesk), sans-serif;
   font-size: 15px;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
@@ -134,7 +141,7 @@ pre,
 code,
 kbd,
 .mono {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
 }
 pre {
   font-size: 12px;
@@ -159,7 +166,7 @@ button {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 1.7px;
@@ -168,7 +175,7 @@ button {
   line-height: 1.6;
 }
 .small-label {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   color: var(--muted);
   font-size: 9px;
   letter-spacing: 1.4px;
@@ -213,12 +220,12 @@ button {
   transform: translateY(-2px);
 }
 .button-primary {
-  background: #2563eb;
-  color: white;
+  background: var(--action-fill);
+  color: var(--on-action);
   box-shadow: 0 4px 10px #2563eb16;
 }
 .button-primary:hover {
-  background: #174fd2;
+  background: var(--action-hover);
   box-shadow: 0 7px 20px #2563eb30;
 }
 .button-secondary {
@@ -269,8 +276,8 @@ button {
   top: 10px;
   left: 10px;
   z-index: 200;
-  background: var(--blue);
-  color: white;
+  background: var(--action-fill);
+  color: var(--on-action);
   padding: 12px 18px;
   transform: translateY(-180%);
 }
@@ -293,7 +300,7 @@ button {
   gap: 12px;
 }
 .announcement-pill {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 9px;
   font-weight: 500;
   letter-spacing: 0.3px;
@@ -322,6 +329,7 @@ button {
   gap: 35px;
 }
 .brand {
+  font-family: "Inter Variable", Inter, Arial, sans-serif;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -454,7 +462,7 @@ button {
   min-width: 0;
 }
 .command-dollar {
-  font-family: monospace;
+  font-family: var(--font-jetbrains), monospace;
   color: var(--blue);
   font-size: 13px;
 }
@@ -534,7 +542,7 @@ button {
   padding: 16px 20px;
   font-size: 8px;
   color: var(--muted);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   letter-spacing: 0.5px;
 }
 .diagram-top {
@@ -556,7 +564,7 @@ button {
   letter-spacing: 0;
 }
 .diagram-bottom > span:first-child {
-  font-family: "Inter Variable", sans-serif;
+  font-family: var(--font-space-grotesk), sans-serif;
   font-size: 10px;
 }
 .diagram-canvas {
@@ -670,7 +678,7 @@ button {
   left: -30%;
   right: -30%;
   text-align: center;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 7px;
   letter-spacing: 1px;
   color: var(--muted);
@@ -679,7 +687,7 @@ button {
   position: absolute;
   right: 3%;
   top: 47.5%;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 9px;
   color: var(--blue);
 }
@@ -689,7 +697,7 @@ button {
 .diagram-label {
   position: absolute;
   color: var(--muted);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 6px;
   letter-spacing: 1.5px;
 }
@@ -736,7 +744,7 @@ button {
   min-height: 102px;
 }
 .tech-label {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 8px;
   letter-spacing: 1px;
   line-height: 1.9;
@@ -768,7 +776,7 @@ button {
   font-weight: 450;
 }
 .technology:nth-child(5) {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 16px;
 }
 .technology:nth-child(6) {
@@ -870,7 +878,7 @@ button {
     opacity 0.35s,
     filter 0.35s;
 }
-.is-unified .stack-parts > div {
+.is-unified .stack-part-symbol {
   opacity: 0.55;
   filter: grayscale(1);
 }
@@ -990,11 +998,11 @@ button {
   top: 34px;
   right: 28px;
   color: var(--muted);
-  opacity: 0.5;
-  font-family: "JetBrains Mono", monospace;
+  opacity: 1;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 9px;
 }
-.feature-card h3 {
+.feature-card :is(h2, h3) {
   font-size: 18px;
   letter-spacing: -0.5px;
   margin-bottom: 12px;
@@ -1012,7 +1020,7 @@ button {
   padding-right: 12px;
 }
 .feature-tags > span {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 7px;
   line-height: 1.8;
   background: var(--surface);
@@ -1130,7 +1138,7 @@ button {
   justify-content: space-between;
   padding: 9px 16px;
   border-bottom: 1px solid #ffffff0b;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 9px;
   color: #a3b1c9;
 }
@@ -1197,7 +1205,7 @@ button {
   background: var(--border);
 }
 .dashboard-chrome .demo-label {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 8px;
   color: var(--muted);
 }
@@ -1254,7 +1262,7 @@ button {
   gap: 15px;
 }
 .dashboard-heading > div > span {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 7px;
   letter-spacing: 1.2px;
   color: var(--muted);
@@ -1337,7 +1345,7 @@ button {
   color: var(--muted);
 }
 .dashboard-table .dashboard-table-head {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 7px;
   letter-spacing: 0.6px;
   padding-top: 0;
@@ -1479,7 +1487,7 @@ button {
   align-items: center;
   gap: 8px;
   color: var(--blue);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 9px;
   border-bottom: 1px solid var(--border);
   padding-bottom: 12px;
@@ -1504,7 +1512,7 @@ button {
 }
 .mcp-card-bottom > span:last-child {
   margin-left: auto;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 7px;
 }
 .faq-section {
@@ -1588,7 +1596,7 @@ button {
   margin-top: 26px;
 }
 .cta-footnote {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 8px;
   letter-spacing: 0.5px;
   color: var(--muted);
@@ -1625,7 +1633,7 @@ button {
   font-size: 9px;
   color: var(--muted);
 }
-.footer-grid h3 {
+.footer-grid h2 {
   font-size: 11px;
   letter-spacing: 0;
   font-weight: 600;
@@ -1658,7 +1666,7 @@ button {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 8px;
 }
 .page-heading {
@@ -1880,7 +1888,7 @@ button {
   gap: 12px;
 }
 .release-meta strong {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 19px;
   letter-spacing: -0.7px;
 }
@@ -1929,7 +1937,7 @@ button {
   font-size: 23px;
 }
 .flow-heading span {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 9px;
   color: var(--muted);
 }
@@ -1949,7 +1957,7 @@ button {
   background: var(--bg);
 }
 .flow-step > span {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 9px;
   color: var(--blue);
 }
@@ -2021,7 +2029,7 @@ button {
   margin-bottom: 24px;
 }
 .docs-sidebar h3 {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 8px;
   font-weight: 400;
   letter-spacing: 1px;
@@ -2080,7 +2088,7 @@ button {
   border-color: var(--blue);
 }
 .docs-card > span {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 8px;
   color: var(--blue);
   letter-spacing: 0.5px;
@@ -2144,7 +2152,7 @@ button {
   padding-left: 18px;
 }
 .doc-toc > span {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 8px;
   letter-spacing: 0.7px;
   color: var(--muted);
@@ -2329,7 +2337,7 @@ button {
   .docs-cards {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  .feature-card h3 {
+  .feature-card :is(h2, h3) {
     font-size: clamp(18px, 1.15vw, 21px);
   }
   .feature-card p {
@@ -2402,7 +2410,7 @@ button {
   .healthy {
     font-size: 11px;
   }
-  .footer-grid h3,
+  .footer-grid h2,
   .footer-grid > div:not(:first-child) > a,
   .footer-brand p {
     font-size: 13px;
@@ -2504,7 +2512,7 @@ button {
   .feature-card {
     padding: 24px 20px;
   }
-  .feature-card h3 {
+  .feature-card :is(h2, h3) {
     font-size: 16px;
   }
   .feature-card p {
@@ -2788,7 +2796,7 @@ button {
   .feature-tags > span {
     font-size: 7px;
   }
-  .feature-card h3 {
+  .feature-card :is(h2, h3) {
     font-size: 18px;
   }
   .config-layout {
@@ -3015,6 +3023,10 @@ button {
     border-bottom: 1px solid var(--border);
     box-shadow: 0 10px 20px #0001;
     flex-direction: column;
+    max-height: calc(100dvh - 103px - env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scroll-padding-block: 12px;
   }
   .mobile-nav > a,
   .mobile-nav > button {
@@ -3246,7 +3258,7 @@ button {
   .feature-card {
     padding: 25px;
   }
-  .feature-card h3 {
+  .feature-card :is(h2, h3) {
     font-size: 21px;
   }
   .feature-card p {
@@ -3519,7 +3531,7 @@ button {
   .footer-made {
     font-size: 9px;
   }
-  .footer-grid h3 {
+  .footer-grid h2 {
     font-size: 11px;
   }
   .footer-grid > div:not(:first-child) > a {
@@ -3726,7 +3738,7 @@ button {
     gap: 8px;
   }
   .search-input input {
-    font-size: 13px;
+    font-size: 16px;
   }
   .search-bottom {
     font-size: 7px;
@@ -3827,7 +3839,7 @@ button {
   margin-bottom: 15px;
 }
 .download-file {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains), monospace;
   font-size: 10px;
   color: var(--muted);
 }

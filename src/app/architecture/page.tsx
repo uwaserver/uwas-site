@@ -30,7 +30,11 @@ export default function Architecture() {
             <h2>A request’s journey.</h2>
             <span>SIMPLIFIED REQUEST LIFECYCLE</span>
           </div>
-          <div className="flow-steps">
+          <section
+            className="flow-steps"
+            tabIndex={0}
+            aria-label="Request lifecycle"
+          >
             {steps.map(([id, title, body], i) => (
               <div style={{ display: "contents" }} key={id}>
                 <div className="flow-step">
@@ -41,7 +45,7 @@ export default function Architecture() {
                 {i < steps.length - 1 && <ArrowRight size={17} />}
               </div>
             ))}
-          </div>
+          </section>
         </div>
         <div className="architecture-grid">
           {[

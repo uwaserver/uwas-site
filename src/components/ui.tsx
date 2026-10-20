@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
@@ -48,7 +55,7 @@ export function Reveal({
     <motion.div
       className={className}
       initial={false}
-      whileInView={reduce ? {} : { y: [16, 0], opacity: [0.65, 1] }}
+      whileInView={reduce ? {} : { y: [16, 0] }}
       viewport={{ once: true, amount: 0.12 }}
       transition={{ duration: 0.55, delay, ease: [0.2, 0.65, 0.3, 1] }}
     >
@@ -150,7 +157,7 @@ export function CodeBlock({
           <CopyButton text={code} />
         </span>
       </div>
-      <pre>
+      <pre tabIndex={0} aria-label={`${title} code`}>
         <code>
           <Highlight code={code} />
         </code>
@@ -187,18 +194,28 @@ export function ButtonLink({
 export function Header() {
   const path = usePathname();
   const [open, setOpen] = useState(false);
+  const navigationTrigger = useRef<HTMLButtonElement>(null);
+  const searchTrigger = useRef<HTMLButtonElement>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const restoreSearchFocus = useCallback(() => {
+    if (searchTrigger.current?.getClientRects().length)
+      searchTrigger.current.focus();
+    else navigationTrigger.current?.focus();
+  }, []);
   useEffect(() => {
     function keys(event: KeyboardEvent) {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
         setSearchOpen((v) => !v);
       }
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape" && open) {
+        setOpen(false);
+        navigationTrigger.current?.focus();
+      }
     }
     window.addEventListener("keydown", keys);
     return () => window.removeEventListener("keydown", keys);
-  }, []);
+  }, [open]);
   const links = [
     ["Features", "/features/"],
     ["Use cases", "/use-cases/"],
@@ -207,16 +224,17 @@ export function Header() {
   ];
   return (
     <>
-      <div className="announcement">
+      <aside className="announcement" aria-label="Latest release">
         <Link href="/changelog/">
           <span className="announcement-pill">{VERSION}</span> A little less
           stack. A lot more server. <ArrowRight size={14} />
         </Link>
-      </div>
+      </aside>
       <header className="site-header">
         <div className="container header-inner">
-          <Link href="/" aria-label="UWAS home" onClick={() => setOpen(false)}>
+          <Link href="/" onClick={() => setOpen(false)}>
             <Logo />
+            <span className="sr-only"> home</span>
           </Link>
           <nav className="desktop-nav" aria-label="Main navigation">
             {links.map(([label, href]) => (
@@ -232,11 +250,13 @@ export function Header() {
           <div className="header-actions">
             <button
               className="search-trigger"
-              aria-label="Search documentation"
+              ref={searchTrigger}
+              aria-keyshortcuts="Control+K Meta+K"
               onClick={() => setSearchOpen(true)}
             >
               <Search size={16} />
-              <kbd>⌘ K</kbd>
+              <span className="sr-only">Search documentation</span>
+              <kbd aria-hidden="true">⌘ K</kbd>
             </button>
             <ThemePicker />
             <AnimationToggle />
@@ -253,6 +273,7 @@ export function Header() {
             </a>
             <button
               className="icon-button mobile-toggle"
+              ref={navigationTrigger}
               aria-label={open ? "Close navigation" : "Open navigation"}
               aria-expanded={open}
               aria-controls="mobile-navigation"
@@ -269,7 +290,12 @@ export function Header() {
             aria-label="Mobile navigation"
           >
             {links.map(([label, href]) => (
-              <Link href={href} key={href} onClick={() => setOpen(false)}>
+              <Link
+                href={href}
+                key={href}
+                aria-current={path.startsWith(href) ? "page" : undefined}
+                onClick={() => setOpen(false)}
+              >
                 {label}
                 <ArrowRight size={16} />
               </Link>
@@ -289,14 +315,26 @@ export function Header() {
           </nav>
         )}
       </header>
-      {searchOpen && <SearchDialog onClose={() => setSearchOpen(false)} />}
+      {searchOpen && (
+        <SearchDialog
+          onClose={() => setSearchOpen(false)}
+          restoreFocus={restoreSearchFocus}
+        />
+      )}
     </>
   );
 }
 
-function SearchDialog({ onClose }: { onClose: () => void }) {
+function SearchDialog({
+  onClose,
+  restoreFocus,
+}: {
+  onClose: () => void;
+  restoreFocus: () => void;
+}) {
   const ref = useRef<HTMLDialogElement>(null);
   const input = useRef<HTMLInputElement>(null);
+  const inputId = useId();
   const [query, setQuery] = useState("");
   const results = docs.filter((d) =>
     `${d.title} ${d.summary} ${d.sections.map((s) => `${s.title} ${s.body}`).join(" ")}`
@@ -305,10 +343,21 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
   );
   useEffect(() => {
     const dialog = ref.current;
+    const previous = document.activeElement;
     dialog?.showModal();
     input.current?.focus();
-    return () => dialog?.close();
-  }, []);
+    return () => {
+      dialog?.close();
+      if (
+        previous instanceof HTMLElement &&
+        previous !== document.body &&
+        previous.isConnected &&
+        previous.getClientRects().length
+      )
+        previous.focus();
+      else restoreFocus();
+    };
+  }, [restoreFocus]);
   return (
     <dialog
       ref={ref}
@@ -321,12 +370,15 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
     >
       <div className="search-input">
         <Search size={21} />
+        <label className="sr-only" htmlFor={inputId}>
+          Search documentation pages
+        </label>
         <input
+          id={inputId}
           ref={input}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search documentation…"
-          aria-label="Search documentation pages"
         />
         <button
           onClick={onClose}
@@ -363,7 +415,9 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
         )}
       </div>
       <div className="search-bottom">
-        <span>{results.length} guides · Search runs on your device</span>
+        <span role="status">
+          {results.length} guides · Search runs on your device
+        </span>
         <kbd>esc to close</kbd>
       </div>
     </dialog>
@@ -405,8 +459,9 @@ export function Footer() {
     <footer className="site-footer">
       <div className="container footer-grid">
         <div className="footer-brand">
-          <Link href="/" aria-label="UWAS home">
+          <Link href="/">
             <Logo />
+            <span className="sr-only"> home</span>
           </Link>
           <p>
             Unified Web Application Server.
@@ -417,7 +472,7 @@ export function Footer() {
         </div>
         {columns.map((col) => (
           <div key={col.title}>
-            <h3>{col.title}</h3>
+            <h2>{col.title}</h2>
             {col.links.map(([label, href]) => (
               <Link href={href} key={label}>
                 {label}

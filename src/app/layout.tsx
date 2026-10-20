@@ -3,6 +3,7 @@ import { Footer, Header } from "@/components/ui";
 import { REPO } from "@/lib/content";
 import { SiteBackground } from "@/components/site-background";
 import { mouseEffectsScript } from "@/lib/background-animations";
+import { themeScript } from "@/lib/theme-preference";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -42,8 +43,6 @@ export const viewport: Viewport = {
     { media: "(prefers-color-scheme: dark)", color: "#0b101b" },
   ],
 };
-
-const themeScript = `try{var t=localStorage.getItem('uwas-theme')||'system';document.documentElement.dataset.theme=t==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):t}catch(e){document.documentElement.dataset.theme=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}`;
 
 export default function RootLayout({
   children,

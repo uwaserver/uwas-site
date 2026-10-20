@@ -218,7 +218,9 @@ export function Hero() {
             </div>
             <div className="hero-command">
               <span className="command-dollar">$</span>
-              <code>{INSTALL}</code>
+              <code tabIndex={0} aria-label="Installation command">
+                {INSTALL}
+              </code>
               <CopyButton text={INSTALL} />
             </div>
             <div className="hero-trust">
@@ -383,6 +385,7 @@ export function StackComparison() {
 }
 
 export function FeatureGrid({ all = false }: { all?: boolean }) {
+  const Heading = all ? "h2" : "h3";
   const [category, setCategory] = useState("All");
   const shown = (all ? features : features.slice(0, 6)).filter(
     (f) => category === "All" || f.group === category,
@@ -414,7 +417,7 @@ export function FeatureGrid({ all = false }: { all?: boolean }) {
               <span className="feature-number">
                 {String(features.indexOf(feature) + 1).padStart(2, "0")}
               </span>
-              <h3>{feature.title}</h3>
+              <Heading>{feature.title}</Heading>
               <p>{feature.description}</p>
               <div className="feature-tags">
                 {feature.tags.map((tag) => (

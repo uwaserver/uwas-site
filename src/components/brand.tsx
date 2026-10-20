@@ -24,9 +24,13 @@ export function LogoMark({ className = "" }: { className?: string }) {
 
 export function Logo({ small = false }: { small?: boolean }) {
   return (
-    <span className={`brand ${small ? "brand-small" : ""}`} aria-label="UWAS">
+    <span
+      className={`brand ${small ? "brand-small" : ""}`}
+      role="img"
+      aria-label="UWAS"
+    >
       <LogoMark />
-      <span>WAS</span>
+      <span aria-hidden="true">WAS</span>
     </span>
   );
 }

@@ -3,6 +3,7 @@ node_modules/
 out/
 .reference/
 .qa/
+.temp_files/
 *.tsbuildinfo
 .env*
 !.env.example

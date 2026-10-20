@@ -1,5 +1,9 @@
 # Website validation
 
+## Design and interaction review, October 20, 2026
+
+Space Grotesk became the shared UI font, while SVG/wordmark geometry and the OXOG signature were preserved. Repaired contrast, heading/name semantics, keyboard access to code, short-screen overlays, focus restoration and invalid initial theme values. Two 684-combination layout passes found no document overflow; the final all-page and open-panel axe passes reported no rule violations. The native suite now has 29 passing tests. See [Design and interaction review](DESIGN-REVIEW.md) for exact coverage, before/after findings and untested platform boundaries.
+
 ## OXOG footer reference, October 19, 2026
 
 - Replaced the expanded studio section with the single linked card from [Mammoth Engine](https://mammothengine.com/): identical copy, four SVG paths, pink/purple colors, Manrope/Space Grotesk fonts, padding, logo sizes and responsive breakpoints. Removed the project list and extra studio/company rows.

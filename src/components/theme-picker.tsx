@@ -8,16 +8,17 @@ import {
   useSyncExternalStore,
 } from "react";
 import { Check, ChevronDown, Monitor, Moon, Sun } from "lucide-react";
+import {
+  normalizeTheme as normalize,
+  type Theme,
+} from "@/lib/theme-preference";
 
-type Theme = "light" | "dark" | "system";
 const THEME_KEY = "uwas-theme";
 const choices = [
   { value: "light", label: "Light", icon: Sun },
   { value: "dark", label: "Dark", icon: Moon },
   { value: "system", label: "System", icon: Monitor },
 ] as const;
-const normalize = (value: string | null | undefined): Theme =>
-  value === "light" || value === "dark" ? value : "system";
 
 function snapshot(): Theme {
   const preference = document.documentElement.dataset.themePreference;
