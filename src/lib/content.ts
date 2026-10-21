@@ -1,8 +1,8 @@
 export const REPO = "https://github.com/uwaserver/uwas";
-export const VERSION = "v0.11.28";
+export const VERSION = "v0.11.31";
 export const INSTALL =
   "curl -fsSL https://raw.githubusercontent.com/uwaserver/uwas/main/install.sh | sh";
-export const SOURCE_REVISION = "5e4a93a3d8629d43950d1a9940e20e38c010ca4e";
+export const SOURCE_REVISION = "3f9c6e71e21ef5ad89006cb10a75e39c54b9f8e2";
 
 export const configurations = {
   "Static site": `global:
@@ -98,7 +98,7 @@ export const features = [
     group: "Web server",
     title: "Your PHP has a home.",
     description:
-      "FastCGI connection pooling, per-domain PHP versions and an Apache-compatible rewrite engine for .htaccess imports.",
+      "FastCGI connection pooling, per-domain PHP 8.2+ versions and an Apache-compatible rewrite engine for .htaccess imports.",
     tags: ["PHP-FPM", "WordPress", ".htaccess"],
     doc: "wordpress",
   },
@@ -248,7 +248,7 @@ export const docs: Doc[] = [
       },
       {
         title: "Build from source",
-        body: "The current upstream README requires Go 1.26.5 or newer. Build with the project Makefile.",
+        body: "The reviewed release’s go.mod requires Go 1.26.10 or newer. Build with the project Makefile.",
         code: "git clone https://github.com/uwaserver/uwas.git\ncd uwas\nmake build\n\n# Binary: bin/uwas",
       },
       {
@@ -260,6 +260,7 @@ export const docs: Doc[] = [
         title: "Update intentionally",
         body: "Read UPGRADING.md and the release notes before updating, particularly on multi-user servers. Back up your configuration first. The update script downloads the latest binary and restarts the service.",
         code: "uwas backup\ncurl -fsSL https://raw.githubusercontent.com/uwaserver/uwas/main/update.sh | sh",
+        note: "v0.11.31 needs no configuration or data migration. Update host PHP separately to a patched release and rebuild PHP and WordPress container images; updating the UWAS binary does not patch PHP.",
       },
     ],
   },
@@ -331,13 +332,17 @@ export const docs: Doc[] = [
       },
       {
         title: "Control cacheability per domain",
-        body: "Set a time-to-live appropriate to your content. Dynamic and authenticated routes need deliberate bypass rules; review the full upstream configuration before enabling a cache for an application.",
+        body: "Set a time-to-live appropriate to your content. A positive s-maxage or max-age from the origin caps the configured TTL. Dynamic and authenticated routes need deliberate bypass rules; review the full upstream configuration before enabling a cache for an application.",
         code: "domains:\n  - host: example.com\n    type: static\n    root: /var/www/html\n    cache:\n      enabled: true\n      ttl: 1800",
       },
       {
         title: "Freshness and invalidation",
-        body: "Grace mode and stale-while-revalidate can serve an existing response during refresh. Tag-based purge invalidates related content, and ESI assembles fragments. Inspect stats and purge with the CLI or dashboard.",
+        body: "Grace mode and stale-while-revalidate can serve an existing response during refresh. Client Cache-Control: no-cache and Pragma: no-cache headers no longer bypass the response cache; purge entries or configure a cache rule with bypass: true for fresh content. Purging a domain also clears its alias and www entries. Tag-based purge invalidates related content, and ESI assembles fragments.",
         code: "uwas cache stats\nuwas cache purge",
+      },
+      {
+        title: "Response headers on proxy domains",
+        body: "A cache rule’s cache_control value is sent to clients on proxied domains, on both cache misses and hits. Review these rules when upgrading because clients may start receiving headers previously overwritten by the origin.",
       },
     ],
   },
@@ -373,8 +378,12 @@ export const docs: Doc[] = [
     sections: [
       {
         title: "Connect PHP-FPM",
-        body: "UWAS provides the FastCGI client and connection pooling; PHP-FPM still executes PHP. Install a supported PHP runtime and point fpm_address at its actual socket or TCP listener.",
+        body: "UWAS provides the FastCGI client and connection pooling; PHP-FPM still executes PHP. PHP 8.2 or newer is supported, and the installer refuses older branches. Point fpm_address at the runtime’s actual socket or TCP listener.",
         code: configurations["WordPress"],
+      },
+      {
+        title: "Update PHP alongside UWAS",
+        body: "The v0.11.31 upgrade notes require PHP 8.2.35, 8.3.36, 8.4.27 or 8.5.12 or newer within the corresponding branch for CVE-2026-109618 and CVE-2026-109619. Update PHP on every host separately: the UWAS binary does not patch it. The dashboard flags vulnerable and end-of-life installs; Docker users must rebuild the PHP and WordPress images.",
       },
       {
         title: "Bring your rewrite rules",
@@ -451,7 +460,7 @@ export const docs: Doc[] = [
       },
       {
         title: "Auto-block and the firewall",
-        body: "Connection-level thresholds can identify aborted handshakes and excessive connections. Upstream recommends observing dry-run behavior before enforcing thresholds. Behind a proxy, configure trusted proxies and allowlists carefully to avoid blocking an entire edge network.",
+        body: "Connection-level thresholds can identify aborted handshakes and excessive connections. Canonical-host redirects now count toward domain rate limits, and global rate-limit rejections feed auto-block when feed_rate_hits is enabled. Observe dry-run behavior and review max_rate_hits for shared NAT clients before enforcing thresholds. Behind a proxy, configure trusted proxies and allowlists carefully.",
       },
       {
         title: "Report a vulnerability",
@@ -609,6 +618,10 @@ export const docs: Doc[] = [
         note: "The current upstream Compose mapping publishes TCP 80/443 and loopback admin 9443. Add an explicit 443:443/udp mapping if you enable HTTP/3.",
       },
       {
+        title: "Refresh PHP and WordPress images",
+        body: "The v0.11.31 release updates the PHP image and WordPress FPM/CLI bases to PHP 8.3.36. Rebuild the PHP service and any WordPress images you use when upgrading; replacing only the UWAS binary leaves those PHP runtimes unchanged.",
+      },
+      {
         title: "Reach the dashboard privately",
         body: "The Compose stack binds the admin publication to 127.0.0.1. Access it locally or forward it over SSH. Mount and back up persistent data deliberately; container removal and data recovery are separate operations.",
         code: "ssh -L 9443:127.0.0.1:9443 user@your-server\n\n# http://127.0.0.1:9443/_uwas/dashboard/",
@@ -619,9 +632,34 @@ export const docs: Doc[] = [
 
 export const releases = [
   {
+    version: VERSION,
+    date: "October 21, 2026",
+    type: "Latest release",
+    title: "Updated PHP images and runtime safeguards.",
+    items: [
+      "PHP and WordPress container images move to PHP 8.3.36 for the php2shell fixes (CVE-2026-109618 and CVE-2026-109619). Update host PHP separately and rebuild container images when upgrading.",
+      "PHP 8.2+ is the supported floor. The dashboard flags vulnerable and end-of-life installs, and the installer refuses older branches.",
+      "Go 1.26.10 addresses certificate distrust in crypto/x509; dashboard and upstream docs dependencies receive Vite advisory fixes.",
+      "Dashboard PHP installation passes the selected PHP version correctly. This release supersedes the unpublished v0.11.30 tag.",
+    ],
+  },
+  {
+    version: "v0.11.29",
+    date: "October 20, 2026",
+    type: "Security & reliability",
+    title: "Steadier under load. More precise caching.",
+    items: [
+      "Go 1.26.9 and golang.org/x/net v0.60.0 address HTTP/2 vulnerabilities; proxy mirrors drop client-supplied forwarding headers.",
+      "A bounded logging queue prevents backed-up log output from stalling requests; dropped lines are counted and reported.",
+      "Canonical-host redirects respect domain rate limits, and global rate-limit rejections feed auto-block.",
+      "Client no-cache headers no longer bypass the response cache. Origin freshness caps TTL, domain purges cover aliases and www, and cache_control rules reach proxy clients.",
+      "Backup restore rechecks path containment, WordPress config rewriting avoids duplicate definitions, and database explorer limits handle SQL comments and identifiers.",
+    ],
+  },
+  {
     version: "v0.11.28",
     date: "October 6, 2026",
-    type: "Latest release",
+    type: "Reliability & protection",
     title: "More dependable, down to the details.",
     items: [
       "Image conversions are published atomically so concurrent requests cannot read partially written files.",

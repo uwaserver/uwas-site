@@ -1,5 +1,12 @@
 # Website validation
 
+## UWAS v0.11.31 content refresh, October 22, 2026
+
+- Reviewed the published v0.11.31 tag (`3f9c6e71e21ef5ad89006cb10a75e39c54b9f8e2`), tagged changelog and upgrade notes, and live release asset metadata. Added v0.11.31/v0.11.29 summaries, current download sizes, PHP/runtime upgrade guidance and cache/rate-limit behavior changes. Excluded main’s unreleased changes.
+- `npm run lint`, `npm run typecheck`, `npm test` (29 passed, zero failed/skipped), `npm run build` and `npm run check:export` passed. The export contains 30 HTML pages / 27 canonical routes; internal links, section anchors, assets and crawler metadata resolve.
+- Checked the production export in the browser: changelog, downloads, installation, caching, WordPress/PHP, security and Docker guides at 375px and 1280px; home and features at 1280px. All 16 route/width combinations had no document overflow. The changelog order, five versioned binary URLs, checksum URL, updated guide sections and pinned upstream reference links matched the reviewed release. No browser console errors were observed.
+- These checks validate website content and rendering; they do not execute or certify the UWAS server or PHP runtimes.
+
 ## Design and interaction review, October 20, 2026
 
 Space Grotesk became the shared UI font, while SVG/wordmark geometry and the OXOG signature were preserved. Repaired contrast, heading/name semantics, keyboard access to code, short-screen overlays, focus restoration and invalid initial theme values. Two 684-combination layout passes found no document overflow; the final all-page and open-panel axe passes reported no rule violations. The native suite now has 29 passing tests. See [Design and interaction review](DESIGN-REVIEW.md) for exact coverage, before/after findings and untested platform boundaries.

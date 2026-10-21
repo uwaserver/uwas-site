@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { docs, REPO, VERSION } from "@/lib/content";
+import { docs, REPO, SOURCE_REVISION, VERSION } from "@/lib/content";
 import { CodeBlock } from "@/components/ui";
 export const dynamicParams = false;
 export function generateStaticParams() {
@@ -43,9 +43,9 @@ export default async function DocPage({
         <p className="docs-intro">{doc.summary}</p>
         <div className="doc-meta">
           <span>UWAS {VERSION}</span>
-          <span>Reviewed October 17, 2026</span>
+          <span>Release notes reviewed October 22, 2026</span>
           <a
-            href={`${REPO}/blob/main/${doc.source}`}
+            href={`${REPO}/blob/${SOURCE_REVISION}/${doc.source}`}
             target="_blank"
             rel="noreferrer"
           >

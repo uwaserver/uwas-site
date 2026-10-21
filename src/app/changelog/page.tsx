@@ -52,8 +52,8 @@ export default function Changelog() {
             <ArrowUpRight size={16} />
           </a>
           <aside className="callout">
-            v0.11.27 and v0.11.24 were tags without published binaries. Their
-            changes shipped in v0.11.28 and v0.11.25 respectively.
+            v0.11.30, v0.11.27 and v0.11.24 were tags without published binaries.
+            Their changes shipped in v0.11.31, v0.11.28 and v0.11.25 respectively.
           </aside>
         </div>
       </section>

@@ -9,11 +9,11 @@ export const metadata: Metadata = {
   alternates: { canonical: "/download/" },
 };
 const assets = [
-  ["Linux", "x86-64", "uwas-linux-amd64", "17.7 MB"],
-  ["Linux", "ARM64", "uwas-linux-arm64", "16.4 MB"],
-  ["macOS", "Intel", "uwas-darwin-amd64", "18.0 MB"],
-  ["macOS", "Apple Silicon", "uwas-darwin-arm64", "16.9 MB"],
-  ["Windows", "x86-64", "uwas-windows-amd64.exe", "18.0 MB"],
+  ["Linux", "x86-64", "uwas-linux-amd64", "18.7 MB"],
+  ["Linux", "ARM64", "uwas-linux-arm64", "17.4 MB"],
+  ["macOS", "Intel", "uwas-darwin-amd64", "19.1 MB"],
+  ["macOS", "Apple Silicon", "uwas-darwin-arm64", "17.8 MB"],
+  ["Windows", "x86-64", "uwas-windows-amd64.exe", "19.1 MB"],
 ];
 export default function DownloadPage() {
   return (
